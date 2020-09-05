@@ -46,6 +46,11 @@ protected:
 	float turningSpeed = 22.0f; //转向时的附加速度
 	float lastSpeed = 0.0f; //用于距离增量的计算
 	float distanceDelta = 0.0f;
+	float turnDelta = 0.0f;
+	float distanceSum = 0.0f;
+	float turnSum = 0.0f;
+	float sampletime = 0.2f;
+	bool breakJudge = false;
 	bool isControlling = false;
 	bool isDistanceLogging = true;
 	int SampleTime = 40; //PID控制的采样间隔ms
