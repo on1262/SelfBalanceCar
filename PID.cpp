@@ -107,8 +107,7 @@ void PIDClass::signalDetect()
 			case 'A': //Abort
 				digitalWrite(sleep_left, LOW);
 				digitalWrite(sleep_right, LOW);
-				BTSerial.println("[INFO]Aborted.");
-				delay(10000);
+				exit(0);
 			default:
 				return;
 			}
@@ -120,8 +119,6 @@ void PIDClass::signalDetect()
 				+ 100 * (BTSerial.read() - '0')
 				+ 10 * (BTSerial.read() - '0')
 				+ BTSerial.read() - '0';
-			BTSerial.print("[INFO]SignalExecTime=");
-			BTSerial.println(signalExecTime - now);
 		}
 	}
 }

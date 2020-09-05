@@ -86,7 +86,6 @@ void loop()
 	draw("BlueTooth:9600", 1);
 	BTSerial.begin(9600); //´ò¿ªÀ¶ÑÀ
 	TOUCHONCE;
-	BTSerial.println("===Gyro Setup==");
 	draw("GyroSetup", 1);
 	MPU6050DMP.GyroSetup(0);
 	draw("PIDSetup", 1);
