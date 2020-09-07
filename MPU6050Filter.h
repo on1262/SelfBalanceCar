@@ -1,12 +1,12 @@
 // MPU6050Filter.h
-// ÂË²¨Æ÷£¬¸ºÔğMPU6050µÄÊı¾İ¶ÁÈ¡ºÍ³õ²½´¦Àí
-// °üº¬Ò»¸öI2CÍ¨ĞÅ½Ó¿Ú£º
-//		ReadAccGyr: Ò»´Î´ÓMPU6050ÖĞ¶ÁÈ¡7¸öÖµ£¬ĞŞÕı¹Ì¶¨Îó²î
-//		ReadAccGyrUnFixed: ÎŞĞŞÕı£¬Ô­Ê¼Êı¾İ
-// °üº¬Ò»¸öÆ«²îĞ£×¼·½·¨
-//		Calibration: Ğ£×¼¼ÓËÙ¶È¼ÆºÍÍÓÂİÒÇµÄ¹Ì¶¨Îó²î
-// °üº¬Ò»¸öÂË²¨Æ÷£º
-//		filter: ÔİÊ±²»ĞèÒªÂË²¨Æ÷
+// æ»¤æ³¢å™¨ï¼Œè´Ÿè´£MPU6050çš„æ•°æ®è¯»å–å’Œåˆæ­¥å¤„ç†
+// åŒ…å«ä¸€ä¸ªI2Cé€šä¿¡æ¥å£ï¼š
+//		ReadAccGyr: ä¸€æ¬¡ä»MPU6050ä¸­è¯»å–7ä¸ªå€¼ï¼Œä¿®æ­£å›ºå®šè¯¯å·®
+//		ReadAccGyrUnFixed: æ— ä¿®æ­£ï¼ŒåŸå§‹æ•°æ®
+// åŒ…å«ä¸€ä¸ªåå·®æ ¡å‡†æ–¹æ³•
+//		Calibration: æ ¡å‡†åŠ é€Ÿåº¦è®¡å’Œé™€èºä»ªçš„å›ºå®šè¯¯å·®
+// åŒ…å«ä¸€ä¸ªæ»¤æ³¢å™¨ï¼š
+//		filter: æš‚æ—¶ä¸éœ€è¦æ»¤æ³¢å™¨
 
 #ifndef _MPU6050FILTER_h
 #define _MPU6050FILTER_h
@@ -25,24 +25,24 @@ const int blueToothTX = 12;
 class MPU6050FilterClass
 {
 protected:
-	const int MPU = 0x68; //MPU-6050µÄI2CµØÖ·
-	const int nValCnt = 7; //Ò»´Î¶ÁÈ¡¼Ä´æÆ÷µÄÊıÁ¿
-	int dataPos = 0; //¼ÇÂ¼µ±Ç°¶ÁÈ¡µ½ÁËµÚ¼¸¸öÊı¾İ
+	const int MPU = 0x68; //MPU-6050çš„I2Cåœ°å€
+	const int nValCnt = 7; //ä¸€æ¬¡è¯»å–å¯„å­˜å™¨çš„æ•°é‡
+	int dataPos = 0; //è®°å½•å½“å‰è¯»å–åˆ°äº†ç¬¬å‡ ä¸ªæ•°æ®
 	//float standardG = 16384.0f;
-	float standardG = 15899.0f; //×¢Òâ£¬¼ÓËÙ¶È¼ÆµÄÊä³ö·¶Î§ÊÇ16384,µ«ÊÇ±¾µØGÊÇ15899
+	float standardG = 15899.0f; //æ³¨æ„ï¼ŒåŠ é€Ÿåº¦è®¡çš„è¾“å‡ºèŒƒå›´æ˜¯16384,ä½†æ˜¯æœ¬åœ°Gæ˜¯15899
 
-	/*¹Ì¶¨Îó²îĞ£×¼*/
-	int calibData[7] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }; //Ğ£×¼Êı¾İ
-	const int nCalibTimes = 600; //Ğ£×¼Ê±¶ÁÊıµÄ´ÎÊı
+	/*å›ºå®šè¯¯å·®æ ¡å‡†*/
+	int calibData[7] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }; //æ ¡å‡†æ•°æ®
+	const int nCalibTimes = 600; //æ ¡å‡†æ—¶è¯»æ•°çš„æ¬¡æ•°
 
 public:
-	float gyr2Deg = 0.0; //¸ù¾İ½Ç¶È·¶Î§²»Í¬£¬È·¶¨×ª»»ÏµÊı
-	void init(int FS_SEL); //Éè¶¨Á½ÖÖÂË²¨Ä£Ê½ÏÂ½øĞĞËãÊıÆ½¾ùµÄ²ÉÑùÊı£¬²»³¬¹ı8
+	float gyr2Deg = 0.0; //æ ¹æ®è§’åº¦èŒƒå›´ä¸åŒï¼Œç¡®å®šè½¬æ¢ç³»æ•°
+	void init(int FS_SEL); //è®¾å®šä¸¤ç§æ»¤æ³¢æ¨¡å¼ä¸‹è¿›è¡Œç®—æ•°å¹³å‡çš„é‡‡æ ·æ•°ï¼Œä¸è¶…è¿‡8
 	MPU6050FilterClass() {};
 	void ReadAccGyr(int * pVals);
 	void Calibration();
-	void ReadAccGyrUnFixed(bool isAddMode, int * pVals);//Ö±½Ó¶ÁÈ¡Ô­Ê¼Êı¾İ£¬Ã»ÓĞĞ£×¼£¬Ã»ÓĞÂË²¨
-	void getOriginData(int *nVal); //»ñÈ¡ÂË²¨ºóµÄÔ­Ê¼Êı¾İ£¬ÒÑ¼ÓÉÏĞ£×¼
+	void ReadAccGyrUnFixed(bool isAddMode, int * pVals);//ç›´æ¥è¯»å–åŸå§‹æ•°æ®ï¼Œæ²¡æœ‰æ ¡å‡†ï¼Œæ²¡æœ‰æ»¤æ³¢
+	void getOriginData(int *nVal); //è·å–æ»¤æ³¢åçš„åŸå§‹æ•°æ®ï¼Œå·²åŠ ä¸Šæ ¡å‡†
 };
 
 extern MPU6050FilterClass filter;

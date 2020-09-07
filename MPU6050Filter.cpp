@@ -37,7 +37,7 @@ void MPU6050FilterClass::ReadAccGyrUnFixed(bool isAddMode, int *pVals) {
 		}
 	}
 }
-//´ÓMPU6050¶Á³ö¼ÓËÙ¶È¼ÆÈı¸ö·ÖÁ¿¡¢ÎÂ¶ÈºÍÈı¸ö½ÇËÙ¶È¼Æ
+//ä»MPU6050è¯»å‡ºåŠ é€Ÿåº¦è®¡ä¸‰ä¸ªåˆ†é‡ã€æ¸©åº¦å’Œä¸‰ä¸ªè§’é€Ÿåº¦è®¡
 void MPU6050FilterClass::ReadAccGyr(int *pVals) {
 	Wire.beginTransmission(MPU);
 	Wire.write(0x3B);
@@ -52,7 +52,7 @@ void MPU6050FilterClass::getOriginData(int * nVal)
 	ReadAccGyr(nVal);
 }
 
-//¶Ô´óÁ¿¶ÁÊı½øĞĞÍ³¼Æ£¬Ğ£×¼Æ½¾ùÆ«ÒÆÁ¿
+//å¯¹å¤§é‡è¯»æ•°è¿›è¡Œç»Ÿè®¡ï¼Œæ ¡å‡†å¹³å‡åç§»é‡
 void MPU6050FilterClass::Calibration()
 {
 	float valSums[7] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0 };
@@ -62,7 +62,7 @@ void MPU6050FilterClass::Calibration()
 	while (isFixed == false) {
 		BTSerial.print("Calibration round start...Round=");
 		BTSerial.println(calRound);
-		//¼ì²â
+		//æ£€æµ‹
 		for (int k = 0; k < 7; k++) {
 			valSums[k] = 0.0f;
 		}
@@ -73,11 +73,11 @@ void MPU6050FilterClass::Calibration()
 				valSums[j] += mpuVals[j];
 			}
 		}
-		//¼ÓÈ¨Êä³ö
+		//åŠ æƒè¾“å‡º
 		isFixed = true;
 		for (int i = 0; i < nValCnt; ++i) {
 			int data = valSums[i] / (float)nCalibTimes;
-			if (abs(calibData[i] - data) >= 4 && i != 3) { //thresHold=4 ãĞÖµĞ¡ÓÚ4Ê±ÄÑÒÔÊÕÁ²£¬´óÓÚ4Ê±ÁãÆ¯Ì«Ç¿ÁÒ
+			if (abs(calibData[i] - data) >= 4 && i != 3) { //thresHold=4 é˜ˆå€¼å°äº4æ—¶éš¾ä»¥æ”¶æ•›ï¼Œå¤§äº4æ—¶é›¶æ¼‚å¤ªå¼ºçƒˆ
 				if (calRound == 1) {
 					calibData[i] = data;
 				}
@@ -94,7 +94,7 @@ void MPU6050FilterClass::Calibration()
 		calRound++;
 	}
 	BTSerial.println("Calibration done!");
-	calibData[2] -= standardG; //ÉèĞ¾Æ¬ZÖáÊúÖ±ÏòÏÂ£¬Éè¶¨¾²Ì¬¹¤×÷µã¡£
+	calibData[2] -= standardG; //è®¾èŠ¯ç‰‡Zè½´ç«–ç›´å‘ä¸‹ï¼Œè®¾å®šé™æ€å·¥ä½œç‚¹ã€‚
 }
 
 MPU6050FilterClass filter;

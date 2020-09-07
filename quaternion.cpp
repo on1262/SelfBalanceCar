@@ -1,4 +1,4 @@
-// ËÄÔªÊıÊµÏÖ
+// å››å…ƒæ•°å®ç°
 //
 //
 
@@ -6,7 +6,7 @@
 #include <math.h>
 ZYXRPYDeg Quaternion::getRPYDeg()
 {
-	//ÓÉËÄÔªÊıµÃµ½RPY½Ç£¬Ğı×ªË³ĞòÊÇZ-Y-X, ²¢×ªÎª½Ç¶È
+	//ç”±å››å…ƒæ•°å¾—åˆ°RPYè§’ï¼Œæ—‹è½¬é¡ºåºæ˜¯Z-Y-X, å¹¶è½¬ä¸ºè§’åº¦
 	return ZYXRPYDeg{
 		fRad2Deg * (atan2(2.0f*(a * b + c * d),1.0f - 2.0f * (b * b + c * c))),
 		fRad2Deg * (asin(2.0f * (a * c - b * d))),
@@ -36,7 +36,7 @@ void Quaternion::normalize()
 
 Quaternion Quaternion::mutiple(Quaternion qleft, Quaternion qright)
 {
-	//ËÄÔªÊıÏà³Ë
+	//å››å…ƒæ•°ç›¸ä¹˜
 	return Quaternion(
 		qleft.a * qright.a - qleft.b * qright.b - qleft.c * qright.c - qleft.d * qright.d,
 		qleft.b * qright.a + qleft.a * qright.b - qleft.d * qright.c + qleft.c * qright.d,

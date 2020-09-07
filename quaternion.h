@@ -9,21 +9,21 @@
 	#include "WProgram.h"
 #endif
 
-struct ZYXRPYDeg { //RYP½Ç
-	float roll; //ÈÆXÖá
-	float pitch; //ÈÆYÖá
-	float yaw; //ÈÆZÖá
+struct ZYXRPYDeg { //RYPè§’
+	float roll; //ç»•Xè½´
+	float pitch; //ç»•Yè½´
+	float yaw; //ç»•Zè½´
 };
 
-struct vec3 { //ÈıÎ¬ÏòÁ¿
+struct vec3 { //ä¸‰ç»´å‘é‡
 	double x;
 	double y;
 	double z;
 };
 
-vec3 crossProduct(vec3 left, vec3 right); //ÏòÁ¿²æ³Ë
-vec3 addVec3(vec3 left, vec3 right); //ÏòÁ¿Ïà¼Ó
-vec3 scaleVec3(vec3 v, float coef); //ÏòÁ¿
+vec3 crossProduct(vec3 left, vec3 right); //å‘é‡å‰ä¹˜
+vec3 addVec3(vec3 left, vec3 right); //å‘é‡ç›¸åŠ 
+vec3 scaleVec3(vec3 v, float coef); //å‘é‡
 float lengthVec3(vec3 v);
 
 class Quaternion {
@@ -32,13 +32,13 @@ protected:
 	
 public:
 	Quaternion() {};
-	ZYXRPYDeg getRPYDeg(); //ÓÉËÄÔªÊıµ¼³ö×ËÌ¬½Ç
-	float fRad2Deg = 57.295779513f; //»¡¶È×ª½Ç¶È
+	ZYXRPYDeg getRPYDeg(); //ç”±å››å…ƒæ•°å¯¼å‡ºå§¿æ€è§’
+	float fRad2Deg = 57.295779513f; //å¼§åº¦è½¬è§’åº¦
 	Quaternion(double a,double b, double c,double d): a(a),b(b),c(c),d(d) {}
 	void setQuaternion(double _a, double _b, double _c, double _d);
 	void diaplayQuaternion();
-	void normalize(); //¶Ô×ÔÉí½øĞĞ¹éÒ»»¯
-	static Quaternion mutiple(Quaternion qleft, Quaternion qright); //ËÄÔªÊıÏà³Ë¶ÔÓ¦Á½¸öĞı×ªµÄµş¼Ó, rightÏÈ±ä»»£¬leftºó±ä»»
+	void normalize(); //å¯¹è‡ªèº«è¿›è¡Œå½’ä¸€åŒ–
+	static Quaternion mutiple(Quaternion qleft, Quaternion qright); //å››å…ƒæ•°ç›¸ä¹˜å¯¹åº”ä¸¤ä¸ªæ—‹è½¬çš„å åŠ , rightå…ˆå˜æ¢ï¼Œleftåå˜æ¢
 };
 
 #endif

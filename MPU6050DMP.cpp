@@ -6,16 +6,16 @@ void MPU6050DMPClass::periodicAction()
 {
 	if (nowRound < targetRound) {
 		nowRound++;
-		//ÕâÀï·ÅÃ¿ÂÖ¶¼ĞèÒªµÄÉèÖÃ
+		//è¿™é‡Œæ”¾æ¯è½®éƒ½éœ€è¦çš„è®¾ç½®
 		accFixStep();
 		return;
 	}
 	else {
 		nowRound = 0;
-		//×Ô¶¨Òå´úÂë
+		//è‡ªå®šä¹‰ä»£ç 
 		//display();
 	}
-	//ÕâĞĞÒª·ÅÔÚ×îºó
+	//è¿™è¡Œè¦æ”¾åœ¨æœ€å
 	lastActionMillis = millis();
 }
 
@@ -44,9 +44,9 @@ void MPU6050DMPClass::GyroTestSampling(int sampleCount, int delay_mills, int *da
 	BTSerial.println(millis());
 }
 
-//Ö¸¶¨¼ä¸ôÊä³öµ÷ÊÔĞÅÏ¢
+//æŒ‡å®šé—´éš”è¾“å‡ºè°ƒè¯•ä¿¡æ¯
 void MPU6050DMPClass::display() {
-	//Õâ´Î·ÅÒªÏÔÊ¾µÄÎÄ×Ö
+	//è¿™æ¬¡æ”¾è¦æ˜¾ç¤ºçš„æ–‡å­—
 	ZYXRPYDeg angle = getAngle();
 	BTSerial.print("F(Hz)=");
 	BTSerial.print(targetRound * 1000.0f / (millis() - lastActionMillis));
@@ -61,7 +61,7 @@ void MPU6050DMPClass::GyroSetup(int _sampleDelay)
 {
 	BTSerial.println("GyroSetup...");
 	sampleDelay = _sampleDelay;
-	filter.init(3); //¼ì²âÃ¿Ãë×î´ó½Ç¶È£º3=2000,2=1000,1=500,0=250
+	filter.init(3); //æ£€æµ‹æ¯ç§’æœ€å¤§è§’åº¦ï¼š3=2000,2=1000,1=500,0=250
 	gyr2Deg = filter.gyr2Deg;
 	lastAccFixTime = millis();
 	lastActionMillis = millis();
@@ -75,12 +75,12 @@ void MPU6050DMPClass::GyroSetup(int _sampleDelay)
 void MPU6050DMPClass::GyroLoop()
 {
 	integralUpdateStep();
-	periodicAction(); //ÖÜÆÚĞÔÖ´ĞĞµÄº¯Êı
-	delay(sampleDelay); //ÑÓ³Ù
+	periodicAction(); //å‘¨æœŸæ€§æ‰§è¡Œçš„å‡½æ•°
+	delay(sampleDelay); //å»¶è¿Ÿ
 }
 void MPU6050DMPClass::GyroLoopStart(bool _isAccFixEnabled = true)
 {
-	//¿ªÆô¼ÓËÙ¶ÈĞŞÕı£¬²¢ÖØÖÃËùÓĞ¼ÆÊ±Æ÷
+	//å¼€å¯åŠ é€Ÿåº¦ä¿®æ­£ï¼Œå¹¶é‡ç½®æ‰€æœ‰è®¡æ—¶å™¨
 	isAccFixEnabled = _isAccFixEnabled;
 	long ms = millis();
 	startLoopMills = ms;
@@ -106,7 +106,7 @@ void MPU6050DMPClass::gyroCalibration()
 {
 	
 	BTSerial.println("Running calibration: second part. Don't move the sensor.");
-	//¼ì²éÁãÆ¯
+	//æ£€æŸ¥é›¶æ¼‚
 	startLoopMills = millis();
 	nLastTime = micros();
 	fixAngle = vec3{ 0,0,0 };
@@ -114,7 +114,7 @@ void MPU6050DMPClass::gyroCalibration()
 	while (millis() < endms) {
 		GyroLoop();
 	}
-	//¼ÇÂ¼½Ç
+	//è®°å½•è§’
 	ZYXRPYDeg fangle = integralAngle;
 	fixAngle = vec3{ fangle.roll,fangle.pitch,fangle.yaw };
 	BTSerial.print("fixedRoll=");
@@ -124,34 +124,34 @@ void MPU6050DMPClass::gyroCalibration()
 	BTSerial.print("\t fixedYaw=");
 	BTSerial.print(fixAngle.z);
 	BTSerial.println();
-	//ÖØÖÃ
+	//é‡ç½®
 	integralAngle = ZYXRPYDeg{ 0.0f,0.0f,0.0f };
 	setAngle(0, 0, 0);
 }
 
 void MPU6050DMPClass::accFixStep()
 {
-	//Ğ£×¼ĞèÒªÔÚµÍËÙĞı×ªÌõ¼şÏÂ½øĞĞ
+	//æ ¡å‡†éœ€è¦åœ¨ä½é€Ÿæ—‹è½¬æ¡ä»¶ä¸‹è¿›è¡Œ
 	if ((!isAccFixEnabled) || (millis() < lastAccFixTime + accFixPeriod)) {
 		return;
 	}
 	else {
 		if (abs(filterData[4]) > 60) return;
 	}
-	//¼ÆËã¼ÓËÙ¶È
+	//è®¡ç®—åŠ é€Ÿåº¦
 	filter.ReadAccGyr(filterData);
 	cosG = filterData[2];
 	float accX = filterData[1];
 	cosG /= localG;
 	accX /= localG;
-	if (abs(accX * accX + cosG * cosG - 1.0f) < 0.001f) //ÏŞÖÆ×î´óÎó²î1¶È£¬Ò²¾ÍÊÇ0.1%
+	if (abs(accX * accX + cosG * cosG - 1.0f) < 0.001f) //é™åˆ¶æœ€å¤§è¯¯å·®1åº¦ï¼Œä¹Ÿå°±æ˜¯0.1%
 	{
-		//Ğ£×¼£¬Ö»Ğ£×¼roll½Ç
+		//æ ¡å‡†ï¼Œåªæ ¡å‡†rollè§’
 		if(accX > 0.0f) integralAngle.roll = acos(cosG);
 		else integralAngle.roll = acos(cosG) * -1.0f;
 		BTSerial.print("Accfixed,roll=");
 		BTSerial.println(integralAngle.roll);
-		//ÖØĞÂ¶ÔÀÛ¼ÆÎó²î¼ÆÊ±
+		//é‡æ–°å¯¹ç´¯è®¡è¯¯å·®è®¡æ—¶
 		lastAccFixTime = millis();
 		startLoopMills = millis();
 	}

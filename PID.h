@@ -12,39 +12,39 @@
 
 class PIDClass {
 protected:
-	struct PIDParameterV // static ²»ÊÇ±ØĞë
+	struct PIDParameterV // static ä¸æ˜¯å¿…é¡»
 	{
-		long lastTime;           // Ç°´ÎÊ±¼ä
+		long lastTime;           // å‰æ¬¡æ—¶é—´
 		float left_output, right_output;
 		float Input, output, Setpoint, error, errSum, dErr, lastErr, TimeChange;
-		float turnLSpeed_Need, turnRSpeed_Need;// ×ªÍäÉèÖÃ
-		float Kp, Ki, Kd;                    // ±ÈÀıÏµÊı(8.0f)¡¢»ı·ÖÏµÊı(0.05)¡¢Î¢·ÖÏµÊı(0.26)
+		float turnLSpeed_Need, turnRSpeed_Need;// è½¬å¼¯è®¾ç½®
+		float Kp, Ki, Kd;                    // æ¯”ä¾‹ç³»æ•°(8.0f)ã€ç§¯åˆ†ç³»æ•°(0.05)ã€å¾®åˆ†ç³»æ•°(0.26)
 	};
-	struct PIDParameterS // static ²»ÊÇ±ØĞë
+	struct PIDParameterS // static ä¸æ˜¯å¿…é¡»
 	{
-		long lastTime;           // Ç°´ÎÊ±¼ä
+		long lastTime;           // å‰æ¬¡æ—¶é—´
 		float Input, output, Setpoint, error, errSum, dErr, lastErr, TimeChange;
-		float Kp, Ki, Kd;                    // ±ÈÀıÏµÊı(8.0f)¡¢»ı·ÖÏµÊı(0.05)¡¢Î¢·ÖÏµÊı(0.26)
+		float Kp, Ki, Kd;                    // æ¯”ä¾‹ç³»æ•°(8.0f)ã€ç§¯åˆ†ç³»æ•°(0.05)ã€å¾®åˆ†ç³»æ•°(0.26)
 	};
 
 
-	/*µç»ú¿ØÖÆ*/
+	/*ç”µæœºæ§åˆ¶*/
 	int dirpin_left;
 	int stepperpin_left;
 	int dirpin_right;
 	int stepperpin_right;
 	int sleep_left;
 	int sleep_right;
-	int LPreScaler = 1024; //Ô¤³ıÊı£¬ÓÃÓÚ¿ØÖÆpwm
+	int LPreScaler = 1024; //é¢„é™¤æ•°ï¼Œç”¨äºæ§åˆ¶pwm
 	int RPreScaler = 1024;
-	/*********** PID¿ØÖÆÆ÷²ÎÊı *********/
+	/*********** PIDæ§åˆ¶å™¨å‚æ•° *********/
 	PIDParameterV PIDv;
 	PIDParameterS PIDs;
-	float motorCoef; //µç»úÊä³ö×ª»»²ÎÊı
-	float accCoef; //¼ÓËÙ¶È×ª»»²ÎÊı
-	long signalExecTime = 0;//ĞÅºÅÖ´ĞĞµÄÊ±¼ä£¨ms£©
-	float turningSpeed = 22.0f; //×ªÏòÊ±µÄ¸½¼ÓËÙ¶È
-	float lastSpeed = 0.0f; //ÓÃÓÚ¾àÀëÔöÁ¿µÄ¼ÆËã
+	float motorCoef; //ç”µæœºè¾“å‡ºè½¬æ¢å‚æ•°
+	float accCoef; //åŠ é€Ÿåº¦è½¬æ¢å‚æ•°
+	long signalExecTime = 0;//ä¿¡å·æ‰§è¡Œçš„æ—¶é—´ï¼ˆmsï¼‰
+	float turningSpeed = 22.0f; //è½¬å‘æ—¶çš„é™„åŠ é€Ÿåº¦
+	float lastSpeed = 0.0f; //ç”¨äºè·ç¦»å¢é‡çš„è®¡ç®—
 	float distanceDelta = 0.0f;
 	float turnDelta = 0.0f;
 	float distanceSum = 0.0f;
@@ -53,16 +53,16 @@ protected:
 	bool breakJudge = false;
 	bool isControlling = false;
 	bool isDistanceLogging = true;
-	int SampleTime = 40; //PID¿ØÖÆµÄ²ÉÑù¼ä¸ôms
-	void signalDetect(); //¼ì²âÀ¶ÑÀ·¢ËÍµÄĞÅºÅ
+	int SampleTime = 40; //PIDæ§åˆ¶çš„é‡‡æ ·é—´éš”ms
+	void signalDetect(); //æ£€æµ‹è“ç‰™å‘é€çš„ä¿¡å·
 	void PIDSpeed();
 	void PIDDistance();
 	void speedControl(float speedL, float speedR);
-	void pwm(float leftSpeed, float rightSpeed); //ÕâÀïµÄspeedÊÇÂÖ×ÓµÄÏßËÙ¶È£¬µ¥Î»ÊÇcm/s
+	void pwm(float leftSpeed, float rightSpeed); //è¿™é‡Œçš„speedæ˜¯è½®å­çš„çº¿é€Ÿåº¦ï¼Œå•ä½æ˜¯cm/s
 public:
 	void PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int slp2);
 	void PIDLoop();
-	void PIDLoopStart(); //±ØĞë¾¡ÔçÔÚPIDLoopÇ°µ÷ÓÃ
+	void PIDLoopStart(); //å¿…é¡»å°½æ—©åœ¨PIDLoopå‰è°ƒç”¨
 };
 
 extern PIDClass PID;

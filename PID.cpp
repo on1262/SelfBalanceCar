@@ -7,18 +7,18 @@ void PIDClass::PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int sl
 	stepperpin_right = stp2;
 	sleep_left = slp1;
 	sleep_right = slp2;
-	//µç»ú³õÊ¼»¯
+	//ç”µæœºåˆå§‹åŒ–
 	pinMode(dirpin_left, OUTPUT);
 	pinMode(stepperpin_left, OUTPUT);
 	pinMode(dirpin_right, OUTPUT);
 	pinMode(stepperpin_right, OUTPUT);
-	//²ÎÊı³õÊ¼»¯
+	//å‚æ•°åˆå§‹åŒ–
 	distanceDelta = 0.0f;
 	distanceSum = 0.0f;
 	lastSpeed = 0.0f;
-	//µç»ú¿ØÖÆ²ÎÊı
-	motorCoef = 0.155f; //µç»ú¿ØÖÆ£¨ËÙ¶È»·£©µÄÊä³öÏµÊı
-	//PID²ÎÊı
+	//ç”µæœºæ§åˆ¶å‚æ•°
+	motorCoef = 0.155f; //ç”µæœºæ§åˆ¶ï¼ˆé€Ÿåº¦ç¯ï¼‰çš„è¾“å‡ºç³»æ•°
+	//PIDå‚æ•°
 	PIDv.Kp = 28.0f;
 	PIDv.Ki = 0.04f;
 	PIDv.Kd = 1.0f;
@@ -26,7 +26,7 @@ void PIDClass::PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int sl
 	PIDs.Kp = 4.0f;
 	PIDs.Ki = 0.004f;
 	PIDs.Kd = 0.16f;
-	//³õÊ¼»¯
+	//åˆå§‹åŒ–
 	PIDv.lastTime = 0;
 	PIDv.turnLSpeed_Need = 0.0f;
 	PIDv.turnRSpeed_Need = 0.0f;
@@ -41,7 +41,7 @@ void PIDClass::PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int sl
 	PIDs.output = 0.0f;
 }
 
-//Ëã·¨Ö´ĞĞ
+//ç®—æ³•æ‰§è¡Œ
 void PIDClass::PIDLoop()
 {
 	PIDv.TimeChange = (millis() - PIDv.lastTime);
@@ -54,10 +54,10 @@ void PIDClass::PIDLoop()
 			exit(0);
 		}
 		PIDv.Input = MPU6050DMP.getAngle().roll;
-		signalDetect(); //¼ì²âĞÅºÅ
+		signalDetect(); //æ£€æµ‹ä¿¡å·
 		PIDSpeed();
 		PIDDistance();
-		//Ö´ĞĞ
+		//æ‰§è¡Œ
 		digitalWrite(sleep_left, HIGH);
 		digitalWrite(sleep_right, HIGH);
 		speedControl(motorCoef * PIDv.left_output, motorCoef * PIDv.right_output);
@@ -72,9 +72,9 @@ void PIDClass::PIDLoopStart()
 
 void PIDClass::signalDetect()
 {
-	if ((isControlling && millis() > sampletime) ||breakJudge) {//µ½Ä¿±êµã»òÖĞÍ¾Í£Ö¹
+	if ((isControlling && millis() > sampletime) ||breakJudge) {//åˆ°ç›®æ ‡ç‚¹æˆ–ä¸­é€”åœæ­¢
 		PIDv.turnLSpeed_Need = 0.0f;
-		PIDv.turnRSpeed_Need = 0.0f;//×ªÍä
+		PIDv.turnRSpeed_Need = 0.0f;//è½¬å¼¯
 		PIDv.errSum = 0.0f;
 		PIDs.Setpoint = 0.0f;
 		PIDv.Kp = 28.0f;
@@ -86,7 +86,7 @@ void PIDClass::signalDetect()
 	else {
 		if (BTSerial.available()) {
 			char chrdir[5]; char dis[3] = { chrdir[2] , chrdir[3] , chrdir[4] }; breakJudge = false;
-			sprintf(chrdir, "%d", BTSerial.read());
+			sprintf(chrdir, "%s", BTSerial.read());
 			switch (chrdir[0])
 			{
 			case 'L':
@@ -134,7 +134,7 @@ void PIDClass::signalDetect()
 			}
 			switch (chrdir[1])
 			{
-			case '0'://µÍËÙ
+			case '0'://ä½é€Ÿ
 				PIDv.Setpoint = 0.5f;
 				PIDv.Kp = 28.0f;
 				PIDv.Ki = 0.04f;
@@ -169,7 +169,7 @@ void PIDClass::signalDetect()
 					{
 						PIDSpeed();
 						PIDDistance();
-						//Ö´ĞĞ
+						//æ‰§è¡Œ
 						digitalWrite(sleep_left, HIGH);
 						digitalWrite(sleep_right, HIGH);
 						speedControl(motorCoef * PIDv.left_output, motorCoef * PIDv.right_output);
@@ -192,7 +192,7 @@ void PIDClass::signalDetect()
 					{
 						PIDSpeed();
 						PIDDistance();
-						//Ö´ĞĞ
+						//æ‰§è¡Œ
 						digitalWrite(sleep_left, HIGH);
 						digitalWrite(sleep_right, HIGH);
 						speedControl(motorCoef * PIDv.left_output, motorCoef * PIDv.right_output);
@@ -206,24 +206,24 @@ void PIDClass::signalDetect()
 			{
 				BTSerial.print("-E0");
 			}
-			isControlling = true; //¿ªÆô¿ØÖÆ
+			isControlling = true; //å¼€å¯æ§åˆ¶
 		}
 	}
 }
 
 void PIDClass::PIDSpeed()
 {
-	PIDv.error = PIDv.Setpoint - PIDv.Input;                     // Æ«²îÖµ
+	PIDv.error = PIDv.Setpoint - PIDv.Input;                     // åå·®å€¼
 	PIDv.errSum += PIDv.error * PIDv.TimeChange;
 	PIDv.dErr = (PIDv.error - PIDv.lastErr) / PIDv.TimeChange;
-	PIDv.output = PIDv.Kp * PIDv.error + PIDv.Ki * PIDv.errSum + PIDv.Kd * PIDv.dErr;// ¼ÆËãÊä³öÖµ
-	PIDv.output = -PIDv.output; //½Ç¶ÈÎªÕı£¬µç»úÓ¦µ±ÕıÏòÔË×ª½øĞĞ²¹³¥
-	PIDv.left_output = PIDv.output + PIDv.turnLSpeed_Need;//×óµç»ú
-	PIDv.right_output = PIDv.output + PIDv.turnRSpeed_Need;//ÓÒµç»ú
+	PIDv.output = PIDv.Kp * PIDv.error + PIDv.Ki * PIDv.errSum + PIDv.Kd * PIDv.dErr;// è®¡ç®—è¾“å‡ºå€¼
+	PIDv.output = -PIDv.output; //è§’åº¦ä¸ºæ­£ï¼Œç”µæœºåº”å½“æ­£å‘è¿è½¬è¿›è¡Œè¡¥å¿
+	PIDv.left_output = PIDv.output + PIDv.turnLSpeed_Need;//å·¦ç”µæœº
+	PIDv.right_output = PIDv.output + PIDv.turnRSpeed_Need;//å³ç”µæœº
 	PIDv.lastErr = PIDv.error;
-	PIDv.lastTime = millis();// ¼ÇÂ¼±¾´ÎÊ±¼ä
+	PIDv.lastTime = millis();// è®°å½•æœ¬æ¬¡æ—¶é—´
 	turnDelta=turningSpeed * PIDv.TimeChange;
-	distanceDelta = lastSpeed * PIDv.TimeChange; //»ı·ÖµÃµ½Â·³Ì
+	distanceDelta = lastSpeed * PIDv.TimeChange; //ç§¯åˆ†å¾—åˆ°è·¯ç¨‹
 	turnSum += turnDelta;
 	distanceSum += distanceDelta;
 	lastSpeed = PIDv.output;
@@ -232,17 +232,17 @@ void PIDClass::PIDSpeed()
 void PIDClass::PIDDistance()
 {
 	PIDs.TimeChange = (millis() - PIDs.lastTime);
-	PIDs.Input = distanceDelta / 10000.0f;// ÊäÈë¸³Öµ
-	PIDs.error = PIDs.Setpoint - PIDs.Input;// Æ«²îÖµ
-	if (isDistanceLogging) PIDs.errSum += PIDs.error * PIDs.TimeChange; //Èç¹û²»ÔÚÈËÎª¿ØÖÆ×´Ì¬²Å½øĞĞ¾àÀëĞ£×¼
+	PIDs.Input = distanceDelta / 10000.0f;// è¾“å…¥èµ‹å€¼
+	PIDs.error = PIDs.Setpoint - PIDs.Input;// åå·®å€¼
+	if (isDistanceLogging) PIDs.errSum += PIDs.error * PIDs.TimeChange; //å¦‚æœä¸åœ¨äººä¸ºæ§åˆ¶çŠ¶æ€æ‰è¿›è¡Œè·ç¦»æ ¡å‡†
 	PIDs.dErr = (PIDs.error - PIDs.lastErr) / PIDs.TimeChange;
 	PIDs.output = PIDs.Kp * PIDs.error + PIDs.Ki * PIDs.errSum + PIDs.Kd * PIDs.dErr;
 	PIDv.Setpoint = PIDs.output;
 	PIDs.lastErr = PIDs.error;
-	PIDs.lastTime = millis(); // ¼ÇÂ¼±¾´ÎÊ±¼ä
+	PIDs.lastTime = millis(); // è®°å½•æœ¬æ¬¡æ—¶é—´
 }
 
-//µç»úÇ°½øºóÍË¿ØÖÆ
+//ç”µæœºå‰è¿›åé€€æ§åˆ¶
 void PIDClass::speedControl(float speedL, float speedR) {
 	float L, R;
 	if (speedL < 0.0f) {
@@ -266,7 +266,7 @@ void PIDClass::speedControl(float speedL, float speedR) {
 
 void PIDClass::pwm(float leftSpeed, float rightSpeed)
 {
-	//³¬¹ıÏŞÖÆ¹Ø±Õpwm
+	//è¶…è¿‡é™åˆ¶å…³é—­pwm
 	if (leftSpeed < 0.16f || rightSpeed < 0.16f || leftSpeed > 109.1f || rightSpeed > 109.1f) {
 		TCCR1A = _BV(WGM11) | _BV(WGM10);
 		TCCR2A = _BV(WGM21) | _BV(WGM20);
@@ -274,11 +274,11 @@ void PIDClass::pwm(float leftSpeed, float rightSpeed)
 	}
 	LPreScaler = 1024;
 	RPreScaler = 1024;
-	//¿ªÆôpwm
+	//å¼€å¯pwm
 	TCCR1A = _BV(COM1B1) | _BV(WGM11) | _BV(WGM10);
 	TCCR2A = _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
-	//×ó²àµç»ú
-	if (leftSpeed > 0.615) { //Éè¼Æif·ÖÖ§Ê¹µÃµÍËÙ×´Ì¬·´Ó¦±È½ÏÁé»î
+	//å·¦ä¾§ç”µæœº
+	if (leftSpeed > 0.615) { //è®¾è®¡ifåˆ†æ”¯ä½¿å¾—ä½é€ŸçŠ¶æ€ååº”æ¯”è¾ƒçµæ´»
 		if (leftSpeed < 2.5) {
 			LPreScaler = 256;
 			TCCR1B = _BV(WGM13) | _BV(WGM12) | _BV(CS12);
@@ -297,7 +297,7 @@ void PIDClass::pwm(float leftSpeed, float rightSpeed)
 	else { //1024
 		TCCR1B = _BV(WGM13) | _BV(WGM12) | _BV(CS12) | _BV(CS10);
 	}
-	//ÓÒ²àµç»ú
+	//å³ä¾§ç”µæœº
 	if (rightSpeed > 0.615) {
 		if (rightSpeed < 2.5) {
 			RPreScaler = 256;
