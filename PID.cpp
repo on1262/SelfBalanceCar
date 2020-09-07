@@ -27,14 +27,14 @@ void PIDClass::PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int sl
 	PIDs.Ki = 0.004f;
 	PIDs.Kd = 0.16f;
 	//初始化
-	PIDv.lastTime = 0;
+	PIDv.lastTime = 0.0f;
 	PIDv.turnLSpeed_Need = 0.0f;
 	PIDv.turnRSpeed_Need = 0.0f;
 	PIDv.errSum = 0.0f;
 	PIDv.lastErr = 0.0f;
-	PIDv.Setpoint = 0.5f;
+	PIDv.Setpoint = 0.0f;
 
-	PIDs.lastTime = 0;
+	PIDs.lastTime = 0.0f;
 	PIDs.Setpoint = 0.0f;
 	PIDs.errSum = 0.0f;
 	PIDs.lastErr = 0.0f;
@@ -47,13 +47,13 @@ void PIDClass::PIDLoop()
 	PIDv.TimeChange = (millis() - PIDv.lastTime);
 	if (PIDv.TimeChange >= SampleTime)
 	{
-		if (PIDv.Input > 30 || PIDv.Input < -30) {
+		PIDv.Input = MPU6050DMP.getAngle().roll;
+		if (PIDv.Input > 50.0f || PIDv.Input < -50.0f) {
 			digitalWrite(sleep_left, LOW);
 			digitalWrite(sleep_right, LOW);
 			BTSerial.println("-S");
 			exit(0);
 		}
-		PIDv.Input = MPU6050DMP.getAngle().roll;
 		signalDetect(); //检测信号
 		PIDSpeed();
 		PIDDistance();
@@ -77,42 +77,46 @@ void PIDClass::signalDetect()
 		PIDv.turnRSpeed_Need = 0.0f;//转弯
 		PIDv.errSum = 0.0f;
 		PIDs.Setpoint = 0.0f;
+		PIDv.Setpoint = 0.0f;
 		PIDv.Kp = 28.0f;
 		PIDv.Ki = 0.04f;
 		PIDv.Kd = 1.0f;
 		isControlling = false;
 		isDistanceLogging = true;
+		distanceSum = 0.0f;
+		turnSum = 0.0f;
 	}
 	else {
 		if (BTSerial.available()) {
-			char chrdir[5]; char dis[3] = { chrdir[2] , chrdir[3] , chrdir[4] }; breakJudge = false;
-			sprintf(chrdir, "%d", BTSerial.read());
+			char chrdir[5]; breakJudge = false;
+			for (int i = 0; i < 5; i++)
+			{
+				chrdir[i] =(char) BTSerial.read();
+			}
+			char dis[3] = { chrdir[2] , chrdir[3] , chrdir[4] };
 			switch (chrdir[0])
 			{
 			case 'L':
 				PIDv.turnLSpeed_Need = -turningSpeed;
 				PIDv.turnRSpeed_Need = turningSpeed;
 				PIDs.Setpoint = atoi(dis);
-				BTSerial.print("-L");
-				BTSerial.println(turningSpeed);
 				break;
 			case 'R':
 				PIDv.turnLSpeed_Need = turningSpeed;
 				PIDv.turnRSpeed_Need = -turningSpeed;
 				PIDs.Setpoint = atoi(dis);
-				BTSerial.print("-R");
-				BTSerial.println(turningSpeed);
 				break;
 			case 'F': //forward
 				PIDv.turnLSpeed_Need = 0.0f;
 				PIDv.turnRSpeed_Need = 0.0f;
-				PIDs.Setpoint = atoi(dis);
+				PIDs.Setpoint = atoi(dis) / 10.0f;
 				isDistanceLogging = false;
 				break;
 			case 'B': //forward
 				PIDv.turnLSpeed_Need = 0.0f;
 				PIDv.turnRSpeed_Need = 0.0f;
 				PIDs.Setpoint = -atoi(dis);
+				BTSerial.print(PIDs.Setpoint);
 				isDistanceLogging = false;
 				break;
 			case 'S': //Abort
@@ -135,7 +139,7 @@ void PIDClass::signalDetect()
 			switch (chrdir[1])
 			{
 			case '0'://低速
-				PIDv.Setpoint = 0.5f;
+				PIDv.Setpoint = 0.0f;
 				PIDv.Kp = 28.0f;
 				PIDv.Ki = 0.04f;
 				PIDv.Kd = 1.0f;
@@ -151,54 +155,76 @@ void PIDClass::signalDetect()
 			}
 			if (chrdir[0]=='F'|| chrdir[0] == 'B')
 			{
-				while (PIDs.Setpoint - distanceSum > 0.05*PIDs.Setpoint || distanceSum - PIDs.Setpoint > 0.05* PIDs.Setpoint) {//cm
+				while (abs(PIDs.Setpoint * 10.0f - distanceSum) > 0.05*abs(PIDs.Setpoint * 10.0f) ) {//cm
 					if (BTSerial.available())
 					{
 						BTSerial.print("-E1");
 						breakJudge = true;
 						break;
 					}
-					if (PIDs.Setpoint - distanceSum > 0.15*PIDs.Setpoint || distanceSum - PIDs.Setpoint > 0.15*PIDs.Setpoint)
+					if (abs(PIDs.Setpoint * 10.0f - distanceSum) > 0.4*abs(PIDs.Setpoint * 10.0f))
 					{
-						PIDv.Setpoint = 0.5f;
+						PIDv.Setpoint = 0.0f;
 						PIDv.Kp = 28.0f;
 						PIDv.Ki = 0.04f;
 						PIDv.Kd = 1.0f;
 					}
-					if (millis() > sampletime)
+					MPU6050DMP.GyroLoop();
+					PIDv.TimeChange = (millis() - PIDv.lastTime);
+					if (PIDv.TimeChange > sampletime)
 					{
+						
+						PIDv.Input = MPU6050DMP.getAngle().roll;
+						if (PIDv.Input > 50 || PIDv.Input < -50) {
+							digitalWrite(sleep_left, LOW);
+							digitalWrite(sleep_right, LOW);
+							BTSerial.println("-S");
+							exit(0);
+						}
 						PIDSpeed();
 						PIDDistance();
 						//执行
 						digitalWrite(sleep_left, HIGH);
 						digitalWrite(sleep_right, HIGH);
 						speedControl(motorCoef * PIDv.left_output, motorCoef * PIDv.right_output);
+						/*BTSerial.print("-");
 						BTSerial.print(chrdir[0]);
-						BTSerial.println(distanceDelta);
-						long now = millis();
+						BTSerial.println(distanceDelta/1000);*/
+						/*long now = millis();*/
 					}
 				}
 			}
 			else if (chrdir[0] == 'L' || chrdir[0] == 'R')
 			{
-				while (PIDs.Setpoint - turnSum > 0.05*PIDs.Setpoint) {//cm
+				while (abs(abs(PIDs.Setpoint) - abs(turnSum)) > 0.05*abs(PIDs.Setpoint) ) {//cm
 					if (BTSerial.available())
 					{
 						BTSerial.print("-E1");
 						breakJudge = true;
 						break;
 					}
-					if (millis() > sampletime)
+					MPU6050DMP.GyroLoop();
+					PIDv.TimeChange = (millis() - PIDv.lastTime);
+					if (PIDv.TimeChange > sampletime)
 					{
+						
+						PIDv.Input = MPU6050DMP.getAngle().roll;
+						if (PIDv.Input > 50 || PIDv.Input < -50) {
+							digitalWrite(sleep_left, LOW);
+							digitalWrite(sleep_right, LOW);
+							BTSerial.println("-S");
+							exit(0);
+						}
 						PIDSpeed();
 						PIDDistance();
 						//执行
 						digitalWrite(sleep_left, HIGH);
 						digitalWrite(sleep_right, HIGH);
 						speedControl(motorCoef * PIDv.left_output, motorCoef * PIDv.right_output);
+						/*BTSerial.print("-");
 						BTSerial.print(chrdir[0]);
-						BTSerial.println(turnDelta);
-						long now = millis();
+						BTSerial.println(turnDelta/1000);*/
+						/*long now = millis();*/
 					}
 				}
 			}
@@ -206,8 +232,10 @@ void PIDClass::signalDetect()
 			{
 				BTSerial.print("-E0");
 			}
+			BTSerial.print("youzhiling");
 			isControlling = true; //开启控制
 		}
+		
 	}
 }
 
@@ -224,8 +252,8 @@ void PIDClass::PIDSpeed()
 	PIDv.lastTime = millis();// 记录本次时间
 	turnDelta=turningSpeed * PIDv.TimeChange;
 	distanceDelta = lastSpeed * PIDv.TimeChange; //积分得到路程
-	turnSum += turnDelta;
-	distanceSum += distanceDelta;
+	turnSum += turnDelta/1000;
+	distanceSum += distanceDelta/1000;
 	lastSpeed = PIDv.output;
 }
 

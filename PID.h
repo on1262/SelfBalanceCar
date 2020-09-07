@@ -53,7 +53,7 @@ protected:
 	bool breakJudge = false;
 	bool isControlling = false;
 	bool isDistanceLogging = true;
-	int SampleTime = 40; //PID控制的采样间隔ms
+	int SampleTime = 20; //PID控制的采样间隔ms
 	void signalDetect(); //检测蓝牙发送的信号
 	void PIDSpeed();
 	void PIDDistance();
