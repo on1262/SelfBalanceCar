@@ -23,8 +23,8 @@ protected:
 	struct PIDParameterS // static 不是必须
 	{
 		long lastTime;           // 前次时间
-		float Input, output, Setpoint, error, errSum, dErr, lastErr, TimeChange;
-		float Kp, Ki, Kd;                    // 比例系数(8.0f)、积分系数(0.05)、微分系数(0.26)
+		float Input, output, Setpoint, error, errSum,errII, dErr, lastErr, TimeChange;
+		float Kp, Ki, Kd,Kii;                    // 比例系数(8.0f)、积分系数(0.05)、微分系数(0.26)
 	};
 
 
@@ -51,7 +51,7 @@ protected:
 	float targetRotation = 0.0f;
 	const float turnCoef = 10.0f;
 	float rotatingTime = 0.2f;
-	bool breakJudge = false;
+	bool isDistanceFixed = false;
 	bool isMoving = false;
 	char detectChar = '\0';
 	int SampleTime = 20; //PID控制的采样间隔ms
