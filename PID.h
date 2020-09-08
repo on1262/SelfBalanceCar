@@ -42,17 +42,18 @@ protected:
 	PIDParameterS PIDs;
 	float motorCoef; //电机输出转换参数
 	float accCoef; //加速度转换参数
-	long signalExecTime = 0;//信号执行的时间（ms）
-	float turningSpeed = 22.0f; //转向时的附加速度
+	float turningSpeed = 100.0f; //转向时的附加速度
 	float lastSpeed = 0.0f; //用于距离增量的计算
+	bool isLoggingDistance = true;
 	float distanceDelta = 0.0f;
-	float turnDelta = 0.0f;
 	float distanceSum = 0.0f;
-	float turnSum = 0.0f;
-	float sampletime = 0.2f;
+	float targetDistance = 0.0f;
+	float targetRotation = 0.0f;
+	const float turnCoef = 10.0f;
+	float rotatingTime = 0.2f;
 	bool breakJudge = false;
-	bool isControlling = false;
-	bool isDistanceLogging = true;
+	bool isMoving = false;
+	char detectChar = '\0';
 	int SampleTime = 20; //PID控制的采样间隔ms
 	void signalDetect(); //检测蓝牙发送的信号
 	void PIDSpeed();
@@ -63,6 +64,7 @@ public:
 	void PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int slp2);
 	void PIDLoop();
 	void PIDLoopStart(); //必须尽早在PIDLoop前调用
+	void resetStatus();
 };
 
 extern PIDClass PID;

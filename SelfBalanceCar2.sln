@@ -5,16 +5,12 @@ VisualStudioVersion = 15.0.28307.1209
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SelfBalanceCar2", "SelfBalanceCar2.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Servo-1.1.6", "D:\Software\Arduino\libraries\Servo\Servo-1.1.6.vcxitems", "{2B2AC24A-0D65-467E-9E2F-442AD0AB79EA}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MsTimer2-1.1", "..\libraries\MsTimer2\MsTimer2-1.1.vcxitems", "{8A9DCAB2-93E4-4023-ADB7-49360685E18B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SoftwareSerial-1.0", "..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.3\libraries\SoftwareSerial\SoftwareSerial-1.0.vcxitems", "{4C1B7293-3CA0-476F-9D8C-D65358A54EA5}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		D:\Software\Arduino\libraries\Servo\Servo-1.1.6.vcxitems*{2b2ac24a-0d65-467e-9e2f-442ad0ab79ea}*SharedItemsImports = 9
-		..\libraries\MsTimer2\MsTimer2-1.1.vcxitems*{8a9dcab2-93e4-4023-adb7-49360685e18b}*SharedItemsImports = 9
-		..\libraries\MsTimer2\MsTimer2-1.1.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
-		D:\Software\Arduino\libraries\Servo\Servo-1.1.6.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
+		..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.3\libraries\SoftwareSerial\SoftwareSerial-1.0.vcxitems*{4c1b7293-3ca0-476f-9d8c-d65358a54ea5}*SharedItemsImports = 9
+		..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.3\libraries\SoftwareSerial\SoftwareSerial-1.0.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86

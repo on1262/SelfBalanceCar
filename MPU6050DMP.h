@@ -52,7 +52,7 @@ protected:
 
 	/*基于加速度的零漂修正*/
 	bool isAccFixEnabled = false; //是否开启基于加速度的修正
-	float localG = 15899.0f; //本地G值
+	float localG = 15920.0f; //本地G值
 	long lastAccFixTime = 0;
 	const long accFixPeriod = 500; //每隔一段时间进行一次修正尝试
 	void accFixStep(); //在低角速度时利用加速度进行修正

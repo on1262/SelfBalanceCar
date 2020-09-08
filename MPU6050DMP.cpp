@@ -136,21 +136,25 @@ void MPU6050DMPClass::accFixStep()
 		return;
 	}
 	else {
-		if (abs(filterData[4]) > 60) return;
+		if (abs(filterData[4]) > 5) return;
 	}
 	//计算加速度
 	filter.ReadAccGyr(filterData);
+	if (filterData[2] > localG) return;
 	cosG = filterData[2];
-	float accX = filterData[1];
+	float accY = filterData[1];
 	cosG /= localG;
-	accX /= localG;
-	if (abs(accX * accX + cosG * cosG - 1.0f) < 0.001f) //限制最大误差1度，也就是0.1%
+	accY /= localG;
+	if (abs(accY * accY + cosG * cosG - 1.0f) < 0.001f) //限制最大误差1度，也就是0.1%
 	{
 		//校准，只校准roll角
-		if(accX > 0.0f) integralAngle.roll = acos(cosG);
+		if(accY > 0.0f) integralAngle.roll = acos(cosG);
 		else integralAngle.roll = acos(cosG) * -1.0f;
+
 		BTSerial.print("Accfixed,roll=");
-		BTSerial.println(integralAngle.roll);
+		BTSerial.print(integralAngle.roll);
+		BTSerial.print(" accY=");
+		BTSerial.println(filterData[1]);
 		//重新对累计误差计时
 		lastAccFixTime = millis();
 		startLoopMills = millis();

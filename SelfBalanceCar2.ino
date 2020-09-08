@@ -92,10 +92,9 @@ void loop()
 	PID.PIDsetup(pinDIR1, pinDIR2, pinSTP1, pinSTP2, pinSLP1, pinSLP2);
 	draw("TimerSetup", 1);
 	timerSetup();
-	draw("Ready :)", 1);
-	delay(1000);
 	draw("Touch to loop", 1);
 	TOUCHONCE;
+	delay(1000);
 	draw("Looping", 1);
 	MPU6050DMP.GyroLoopStart(false);
 	PID.PIDLoopStart();

@@ -14,26 +14,23 @@ void PIDClass::PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int sl
 	pinMode(stepperpin_right, OUTPUT);
 	//参数初始化
 	distanceDelta = 0.0f;
-	distanceSum = 0.0f;
 	lastSpeed = 0.0f;
 	//电机控制参数
 	motorCoef = 0.155f; //电机控制（速度环）的输出系数
 	//PID参数
-	PIDv.Kp = 28.0f;
+	PIDv.Kp = 26.0f;
 	PIDv.Ki = 0.04f;
-	PIDv.Kd = 1.0f;
+	PIDv.Kd = 1.5f;
 
-	PIDs.Kp = 4.0f;
-	PIDs.Ki = 0.004f;
-	PIDs.Kd = 0.16f;
+	PIDs.Kp = 10.0f; //8.0f
+	PIDs.Ki = 0.5f; //0.08
+	PIDs.Kd = 2.5f; //0.32
 	//初始化
 	PIDv.lastTime = 0.0f;
 	PIDv.turnLSpeed_Need = 0.0f;
 	PIDv.turnRSpeed_Need = 0.0f;
 	PIDv.errSum = 0.0f;
 	PIDv.lastErr = 0.0f;
-	PIDv.Setpoint = 0.0f;
-
 	PIDs.lastTime = 0.0f;
 	PIDs.Setpoint = 0.0f;
 	PIDs.errSum = 0.0f;
@@ -70,178 +67,125 @@ void PIDClass::PIDLoopStart()
 	PIDs.lastTime = millis();
 }
 
+void PIDClass::resetStatus()
+{
+	PIDv.turnLSpeed_Need = 0.0f;//转弯
+	PIDv.turnRSpeed_Need = 0.0f;
+	PIDs.Setpoint = 0.0f;
+	PIDv.Setpoint = 0.0f;
+	PIDv.Kp = 26.0f;
+	PIDv.Ki = 0.04f;
+	PIDv.Kd = 1.5f;
+	targetDistance = 0.0f;
+	targetRotation = 0.0f;
+	isLoggingDistance = true;
+	isMoving = false;
+}
+
 void PIDClass::signalDetect()
 {
-	if ((isControlling && millis() > sampletime) ||breakJudge) {//到目标点或中途停止
-		PIDv.turnLSpeed_Need = 0.0f;
-		PIDv.turnRSpeed_Need = 0.0f;//转弯
-		PIDv.errSum = 0.0f;
-		PIDs.Setpoint = 0.0f;
-		PIDv.Setpoint = 0.0f;
-		PIDv.Kp = 28.0f;
-		PIDv.Ki = 0.04f;
-		PIDv.Kd = 1.0f;
-		isControlling = false;
-		isDistanceLogging = true;
-		distanceSum = 0.0f;
-		turnSum = 0.0f;
-	}
-	else {
-		if (BTSerial.available()) {
-			char chrdir[5]; breakJudge = false;
-			for (int i = 0; i < 5; i++)
+	BTSerial.println(PIDs.errSum);
+	if (BTSerial.available()) {
+		detectChar = BTSerial.read();
+		char chrdir[5];
+		if (detectChar == 'F' || detectChar == 'B' || detectChar == 'R' || detectChar == 'L' || detectChar == 'A' || detectChar == 'S') {
+			chrdir[0] = detectChar;
+			for (int i = 1; i < 5; i++)
 			{
-				chrdir[i] =(char) BTSerial.read();
+				if (BTSerial.available()) {
+					chrdir[i] = (char)BTSerial.read();
+				}
 			}
-			char dis[3] = { chrdir[2] , chrdir[3] , chrdir[4] };
-			switch (chrdir[0])
+			int data3 = (chrdir[2] - '0') * 100 + (chrdir[3] - '0') * 10 + chrdir[4] - '0';
+
+			switch (detectChar)
 			{
 			case 'L':
-				PIDv.turnLSpeed_Need = -turningSpeed;
-				PIDv.turnRSpeed_Need = turningSpeed;
-				PIDs.Setpoint = atoi(dis);
-				break;
-			case 'R':
+				isMoving = true;
 				PIDv.turnLSpeed_Need = turningSpeed;
 				PIDv.turnRSpeed_Need = -turningSpeed;
-				PIDs.Setpoint = atoi(dis);
+				targetRotation = data3;
+				rotatingTime = millis() + turnCoef * targetRotation;
+				break;
+			case 'R':
+				isMoving = true;
+				PIDv.turnLSpeed_Need = -turningSpeed;
+				PIDv.turnRSpeed_Need = turningSpeed;
+				targetRotation = data3;
+				rotatingTime = millis() + turnCoef * targetRotation;
 				break;
 			case 'F': //forward
-				PIDv.turnLSpeed_Need = 0.0f;
-				PIDv.turnRSpeed_Need = 0.0f;
-				PIDs.Setpoint = atoi(dis) / 10.0f;
-				isDistanceLogging = false;
+				isMoving = true;
+				targetDistance = (float)data3 / 10.0f;
+				PIDv.Setpoint = 1.0f;
+				isLoggingDistance = false;
+				distanceSum = 0.0f;
 				break;
 			case 'B': //forward
-				PIDv.turnLSpeed_Need = 0.0f;
-				PIDv.turnRSpeed_Need = 0.0f;
-				PIDs.Setpoint = -atoi(dis);
-				BTSerial.print(PIDs.Setpoint);
-				isDistanceLogging = false;
+				isMoving = true;
+				targetDistance = -1.0f * (float)data3 / 10.0f;
+				PIDv.Setpoint = -1.0f;
+				isLoggingDistance = false;
+				distanceSum = 0.0f;
 				break;
 			case 'S': //Abort
-				digitalWrite(sleep_left, LOW);
-				digitalWrite(sleep_right, LOW);
-				char stopNum[4]= { chrdir[1], chrdir[2] , chrdir[3] , chrdir[4] };
-				if (stopNum=="0000")
+				if (data3 == 0 && chrdir[1] == '0')
 				{
-					delay(10000);
-					break;
+					if (isMoving == true) {
+						BTSerial.println("-E1;");
+						isMoving = false;
+					}
+					resetStatus();
+					PIDs.errSum = 0;
 				}
 				else
 				{
+					digitalWrite(sleep_left, LOW);
+					digitalWrite(sleep_right, LOW);
 					exit(0);
-					break;
 				}
-			default:
-				return;
-			}
-			switch (chrdir[1])
-			{
-			case '0'://低速
-				PIDv.Setpoint = 0.0f;
-				PIDv.Kp = 28.0f;
-				PIDv.Ki = 0.04f;
-				PIDv.Kd = 1.0f;
-				break;
-			case '1':
-				PIDv.Setpoint = 1.0f;
-				PIDv.Kp = 36.0f;
-				PIDv.Ki = 0.06f;
-				PIDv.Kd = 2.0f;
 				break;
 			default:
-				return;
+				break;
 			}
-			if (chrdir[0]=='F'|| chrdir[0] == 'B')
-			{
-				while (abs(PIDs.Setpoint * 10.0f - distanceSum) > 0.05*abs(PIDs.Setpoint * 10.0f) ) {//cm
-					if (BTSerial.available())
-					{
-						BTSerial.print("-E1");
-						breakJudge = true;
-						break;
-					}
-					if (abs(PIDs.Setpoint * 10.0f - distanceSum) > 0.4*abs(PIDs.Setpoint * 10.0f))
-					{
-						PIDv.Setpoint = 0.0f;
-						PIDv.Kp = 28.0f;
-						PIDv.Ki = 0.04f;
-						PIDv.Kd = 1.0f;
-					}
-					MPU6050DMP.GyroLoop();
-					PIDv.TimeChange = (millis() - PIDv.lastTime);
-					if (PIDv.TimeChange > sampletime)
-					{
-						
-						PIDv.Input = MPU6050DMP.getAngle().roll;
-						if (PIDv.Input > 50 || PIDv.Input < -50) {
-							digitalWrite(sleep_left, LOW);
-							digitalWrite(sleep_right, LOW);
-							BTSerial.println("-S");
-							exit(0);
-						}
-						PIDSpeed();
-						PIDDistance();
-						//执行
-						digitalWrite(sleep_left, HIGH);
-						digitalWrite(sleep_right, HIGH);
-						speedControl(motorCoef * PIDv.left_output, motorCoef * PIDv.right_output);
-						/*BTSerial.print("-");
-						BTSerial.print(chrdir[0]);
-						BTSerial.println(distanceDelta/1000);*/
-						/*long now = millis();*/
-					}
-				}
-			}
-			else if (chrdir[0] == 'L' || chrdir[0] == 'R')
-			{
-				while (abs(abs(PIDs.Setpoint) - abs(turnSum)) > 0.05*abs(PIDs.Setpoint) ) {//cm
-					if (BTSerial.available())
-					{
-						BTSerial.print("-E1");
-						breakJudge = true;
-						break;
-					}
-					MPU6050DMP.GyroLoop();
-					PIDv.TimeChange = (millis() - PIDv.lastTime);
-					if (PIDv.TimeChange > sampletime)
-					{
-						
-						PIDv.Input = MPU6050DMP.getAngle().roll;
-						if (PIDv.Input > 50 || PIDv.Input < -50) {
-							digitalWrite(sleep_left, LOW);
-							digitalWrite(sleep_right, LOW);
-							BTSerial.println("-S");
-							exit(0);
-						}
-						PIDSpeed();
-						PIDDistance();
-						//执行
-						digitalWrite(sleep_left, HIGH);
-						digitalWrite(sleep_right, HIGH);
-						speedControl(motorCoef * PIDv.left_output, motorCoef * PIDv.right_output);
-						/*BTSerial.print("-");
-						BTSerial.print(chrdir[0]);
-						BTSerial.println(turnDelta/1000);*/
-						/*long now = millis();*/
-					}
-				}
-			}
-			if (!breakJudge)
-			{
-				BTSerial.print("-E0");
-			}
-			BTSerial.print("youzhiling");
-			isControlling = true; //开启控制
 		}
-		
+	}
+	if (isMoving == true) {//到目标点或中途停止
+		if (detectChar == 'F' || detectChar == 'B')
+		{
+			//反馈
+			BTSerial.print("-");
+			BTSerial.print(detectChar);
+			BTSerial.print((int)(distanceSum * 10));
+			BTSerial.println(";");
+			//检测退出条件
+			if (abs(targetDistance - distanceSum) < 0.05f * abs(targetDistance)) {
+				isMoving = false;
+				BTSerial.println("-E0;");
+				resetStatus();
+				//PIDs.errSum += targetDistance - distanceSum;
+			}
+		}
+		else if (detectChar == 'L' || detectChar == 'R') {
+			//反馈
+			BTSerial.print("-");
+			int deltaRotatingTime = (targetRotation - (rotatingTime - millis()) / (float)turnCoef);
+			BTSerial.print(detectChar);
+			BTSerial.print(deltaRotatingTime);
+			BTSerial.println(";");
+			//检测退出条件
+			if (rotatingTime - millis() < 0) {
+				BTSerial.println("-E0;");
+				isMoving = false;
+				resetStatus();
+			}
+		}
 	}
 }
 
 void PIDClass::PIDSpeed()
 {
-	PIDv.error = PIDv.Setpoint - PIDv.Input;                     // 偏差值
+	PIDv.error = PIDv.Setpoint - PIDv.Input;                     //输入角度
 	PIDv.errSum += PIDv.error * PIDv.TimeChange;
 	PIDv.dErr = (PIDv.error - PIDv.lastErr) / PIDv.TimeChange;
 	PIDv.output = PIDv.Kp * PIDv.error + PIDv.Ki * PIDv.errSum + PIDv.Kd * PIDv.dErr;// 计算输出值
@@ -250,22 +194,20 @@ void PIDClass::PIDSpeed()
 	PIDv.right_output = PIDv.output + PIDv.turnRSpeed_Need;//右电机
 	PIDv.lastErr = PIDv.error;
 	PIDv.lastTime = millis();// 记录本次时间
-	turnDelta=turningSpeed * PIDv.TimeChange;
-	distanceDelta = lastSpeed * PIDv.TimeChange; //积分得到路程
-	turnSum += turnDelta/1000;
-	distanceSum += distanceDelta/1000;
-	lastSpeed = PIDv.output;
+	distanceDelta = lastSpeed * PIDv.TimeChange; //路程微分
+	lastSpeed = PIDv.output; //输出速度
 }
 
 void PIDClass::PIDDistance()
 {
 	PIDs.TimeChange = (millis() - PIDs.lastTime);
-	PIDs.Input = distanceDelta / 10000.0f;// 输入赋值
-	PIDs.error = PIDs.Setpoint - PIDs.Input;// 偏差值
-	if (isDistanceLogging) PIDs.errSum += PIDs.error * PIDs.TimeChange; //如果不在人为控制状态才进行距离校准
+	PIDs.Input = distanceDelta / 10000.0f;//路程微分
+	if(isLoggingDistance) PIDs.error =  -PIDs.Input;// 偏差值
+	distanceSum += PIDs.Input;	
+	PIDs.errSum += PIDs.error; //起到控制作用,cm/10
 	PIDs.dErr = (PIDs.error - PIDs.lastErr) / PIDs.TimeChange;
 	PIDs.output = PIDs.Kp * PIDs.error + PIDs.Ki * PIDs.errSum + PIDs.Kd * PIDs.dErr;
-	PIDv.Setpoint = PIDs.output;
+	if (isLoggingDistance) PIDv.Setpoint = PIDs.output;
 	PIDs.lastErr = PIDs.error;
 	PIDs.lastTime = millis(); // 记录本次时间
 }
