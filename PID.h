@@ -12,7 +12,7 @@
 
 class PIDClass {
 protected:
-	struct PIDParameterV // static 不是必须
+	struct PIDParameterA // static 不是必须
 	{
 		long lastTime;           // 前次时间
 		float left_output, right_output;
@@ -23,8 +23,14 @@ protected:
 	struct PIDParameterS // static 不是必须
 	{
 		long lastTime;           // 前次时间
-		float Input, output, Setpoint, error, errSum,errII, dErr, lastErr, TimeChange;
-		float Kp, Ki, Kd,Kii;                    // 比例系数(8.0f)、积分系数(0.05)、微分系数(0.26)
+		float Input, output, Setpoint, error, errSum, dErr, lastErr, TimeChange;
+		float Kp, Ki, Kd;                    // 比例系数(8.0f)、积分系数(0.05)、微分系数(0.26)
+	};
+	struct PIDParameterV // static 不是必须
+	{
+		long lastTime;           // 前次时间
+		float Input, output, Setpoint, error, errSum, dErr, lastErr, TimeChange;
+		float Kp, Ki, Kd;                    // 比例系数(8.0f)、积分系数(0.05)、微分系数(0.26)
 	};
 
 
@@ -38,8 +44,9 @@ protected:
 	int LPreScaler = 1024; //预除数，用于控制pwm
 	int RPreScaler = 1024;
 	/*********** PID控制器参数 *********/
-	PIDParameterV PIDv;
+	PIDParameterA PIDa;
 	PIDParameterS PIDs;
+	PIDParameterV PIDv;
 	float motorCoef; //电机输出转换参数
 	float accCoef; //加速度转换参数
 	float turningSpeed = 100.0f; //转向时的附加速度
@@ -47,19 +54,19 @@ protected:
 	bool isLoggingDistance = true;
 	float distanceDelta = 0.0f;
 	float distanceSum = 0.0f;
+	float autoBalancePoint = 0.0f;
 	float targetDistance = 0.0f;
 	float targetRotation = 0.0f;
 	const float turnCoef = 10.0f;
 	float rotatingTime = 0.2f;
-	bool isMovingHalf = false;
 	bool isMoving = false;
 	char detectChar = '\0';
 	int SampleTime = 20; //PID控制的采样间隔ms
 	void signalDetect(); //检测蓝牙发送的信号
-	void PIDSpeed();
+	void PIDAngle();
 	void PIDDistance();
+	void PIDVelocity();
 	void speedControl(float speedL, float speedR);
-	float getHalfSetPoint(float distance);
 	void pwm(float leftSpeed, float rightSpeed); //这里的speed是轮子的线速度，单位是cm/s
 public:
 	void PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int slp2);
