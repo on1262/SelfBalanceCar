@@ -51,7 +51,7 @@ protected:
 	float targetRotation = 0.0f;
 	const float turnCoef = 10.0f;
 	float rotatingTime = 0.2f;
-	bool isDistanceFixed = false;
+	bool isMovingHalf = false;
 	bool isMoving = false;
 	char detectChar = '\0';
 	int SampleTime = 20; //PID控制的采样间隔ms
@@ -59,6 +59,7 @@ protected:
 	void PIDSpeed();
 	void PIDDistance();
 	void speedControl(float speedL, float speedR);
+	float getHalfSetPoint(float distance);
 	void pwm(float leftSpeed, float rightSpeed); //这里的speed是轮子的线速度，单位是cm/s
 public:
 	void PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int slp2);

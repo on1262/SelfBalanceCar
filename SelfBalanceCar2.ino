@@ -11,7 +11,7 @@
 
 #include <MsTimer2.h>
 #include <Servo.h>
-#define TOUCHONCE while(1){if(digitalRead(pinSensor) == HIGH) break;}delay(500)
+#define TOUCHONCE while(1){if(digitalRead(pinSensor) == HIGH || (BTSerial.available() && (char)BTSerial.read() == 'E')) break;}delay(500)
 #include <U8glib.h>
 #include <SoftwareSerial.h>
 #include "PID.h"

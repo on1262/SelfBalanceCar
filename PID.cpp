@@ -18,14 +18,14 @@ void PIDClass::PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int sl
 	//电机控制参数
 	motorCoef = 0.155f; //电机控制（速度环）的输出系数
 	//PID参数
-	PIDv.Kp = 26.0f;
-	PIDv.Ki = 0.04f;
-	PIDv.Kd = 1.5f;
+	PIDv.Kp = 22.0f; //26.0
+	PIDv.Ki = 0.05f;//0.04
+	PIDv.Kd = 1.5f; //1.5
 
 	PIDs.Kp = 12.0f; //12.0f
 	PIDs.Ki = 0.16f; //0.16
-	PIDs.Kd = 0.50f; //0.32
-	PIDs.Kii = 0.002f;
+	PIDs.Kd = 0.32f; //0.32
+	PIDs.Kii = 0.0f;
 	//初始化
 	PIDv.lastTime = 0.0f;
 	PIDv.turnLSpeed_Need = 0.0f;
@@ -75,19 +75,16 @@ void PIDClass::resetStatus()
 	PIDv.turnRSpeed_Need = 0.0f;
 	PIDs.Setpoint = 0.0f;
 	PIDv.Setpoint = 0.0f;
-	PIDv.Kp = 26.0f;
-	PIDv.Ki = 0.04f;
-	PIDv.Kd = 1.5f;
 	targetDistance = 0.0f;
 	targetRotation = 0.0f;
 	isLoggingDistance = true;
 	distanceSum = 0.0f;
 	isMoving = false;
+	isMovingHalf = false;
 }
 
 void PIDClass::signalDetect()
 {
-	//BTSerial.println(PIDs.errII);
 	if (BTSerial.available()) {
 		detectChar = BTSerial.read();
 		char chrdir[5];
@@ -98,9 +95,12 @@ void PIDClass::signalDetect()
 				if (BTSerial.available()) {
 					chrdir[i] = (char)BTSerial.read();
 				}
+				else {
+					BTSerial.print("-E1;");
+					return;
+				}
 			}
 			int data3 = (chrdir[2] - '0') * 100 + (chrdir[3] - '0') * 10 + chrdir[4] - '0';
-
 			switch (detectChar)
 			{
 			case 'L':
@@ -120,20 +120,19 @@ void PIDClass::signalDetect()
 			case 'F': //forward
 				isMoving = true;
 				targetDistance = (float)data3;
-				PIDv.Setpoint += 1.25f;
+				PIDv.Setpoint += 1.15f;
 				isLoggingDistance = false;
 				distanceSum = 0.0f;
 				break;
 			case 'B': //forward
 				isMoving = true;
 				targetDistance = -1.0f * (float)data3;
-				PIDv.Setpoint += -1.25f;
+				PIDv.Setpoint += -1.15f;
 				isLoggingDistance = false;
 				distanceSum = 0.0f;
 				break;
 			case 'A':
 				distanceSum = 0.0f;
-				isDistanceFixed = true;
 				break;
 			case 'S': //Abort
 				if (data3 == 0 && chrdir[1] == '0')
@@ -166,11 +165,17 @@ void PIDClass::signalDetect()
 			BTSerial.print((int)(distanceSum));
 			BTSerial.println(";");
 			//检测退出条件
+			
+			if (isMovingHalf == false && (0.5f * abs(targetDistance) < abs(distanceSum)) && targetDistance*distanceSum >= 0) {
+				if(detectChar == 'F') PIDv.Setpoint -= getHalfSetPoint(abs(targetDistance));//1.45-1.65,1.57
+				if (detectChar == 'B') PIDv.Setpoint += getHalfSetPoint(abs(targetDistance));
+				isMovingHalf = true;
+				//distanceSum = distanceSum - targetDistance;
+			}
 			if (abs(targetDistance) < abs(distanceSum) && targetDistance*distanceSum >= 0) {
 				isMoving = false;
 				BTSerial.println("-E0;");
 				resetStatus();
-				//PIDs.errSum += targetDistance - distanceSum;
 			}
 		}
 		else if (detectChar == 'L' || detectChar == 'R') {
@@ -210,31 +215,29 @@ void PIDClass::PIDDistance()
 {
 	PIDs.TimeChange = (millis() - PIDs.lastTime);
 	PIDs.Input = distanceDelta / 10.0f;
-	PIDs.error = PIDs.Setpoint - PIDs.Input;// 偏差值
-	if (isLoggingDistance) PIDs.errSum += PIDs.error; //起到控制作用,cm/10
-	float tmp = abs(distanceSum);
-	if (isLoggingDistance && isDistanceFixed && tmp < 30.0f) {
-		PIDs.Ki = 0.32f;
-		if (distanceSum > 10.0f) {
-			PIDs.errII -= 0.2f * (30.0f - distanceSum);
-		}
-		else if (distanceSum < -10.0f) {
-			PIDs.errII -= 0.2f * (-30.0f - distanceSum);
-		}
-		else if (tmp > 2.0f) {
-			PIDs.errII -= 0.4 * distanceSum;
+	if (isLoggingDistance) {
+		if (abs(distanceSum) < 70.0f) {
+			PIDs.Kp = 15.0f;
+			PIDs.Ki = 0.16f + (1 - abs(distanceSum) / 70.0f) * 0.64f;
 		}
 		else {
-			PIDs.errII = 0.0f;
+			PIDs.Kp = 12.0f;
+			PIDs.Ki = 0.16f;
 		}
 	}
 	else {
 		PIDs.Ki = 0.16f;
+		PIDs.Kp = 12.0f;
 	}
-	PIDs.dErr = (PIDs.error - PIDs.lastErr) / PIDs.TimeChange;
-	PIDs.output = PIDs.Kp * PIDs.error + PIDs.Ki * PIDs.errSum + PIDs.Kd * PIDs.dErr + PIDs.errII * PIDs.Kii;
-	if (isLoggingDistance) PIDv.Setpoint = PIDs.output;
-	PIDs.lastErr = PIDs.error;
+	if (isLoggingDistance) {
+		PIDs.error = PIDs.Setpoint - PIDs.Input;// 偏差值
+		PIDs.errSum += PIDs.error; //起到控制作用,cm/10
+		PIDs.dErr = (PIDs.error - PIDs.lastErr) / PIDs.TimeChange;
+		PIDs.output = PIDs.Kp * PIDs.error + PIDs.Ki * PIDs.errSum + PIDs.Kd * PIDs.dErr;
+		PIDv.Setpoint = PIDs.output;
+		PIDs.lastErr = PIDs.error;
+	}
+
 	PIDs.lastTime = millis(); // 记录本次时间
 }
 
@@ -258,6 +261,20 @@ void PIDClass::speedControl(float speedL, float speedR) {
 		R = speedR;
 	}
 	pwm(L, R);
+}
+
+float PIDClass::getHalfSetPoint(float distance)
+{
+	if (distance < 40) { //10cm
+		return 1.55f;
+	}
+	else if (distance < 250) {
+		return 2.0f;
+	}
+	else {
+		return 1.55f;
+	}
+	return 0.0f;
 }
 
 void PIDClass::pwm(float leftSpeed, float rightSpeed)
