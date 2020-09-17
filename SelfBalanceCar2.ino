@@ -9,9 +9,11 @@
 // Define User Types below here or use a .h file
 //
 
+//DEBUG开关，关闭时不输出测试信息
+//#define SERIAL_DEBUG 1
 #include <MsTimer2.h>
 #include <Servo.h>
-#define TOUCHONCE while(1){if(digitalRead(pinSensor) == HIGH || (BTSerial.available() && (char)BTSerial.read() == 'E')) break;}delay(500)
+#define TOUCHONCE while(1){if(digitalRead(pinSensor) == HIGH || (Serial.available() && (char)Serial.read() == 'E')) break;}delay(500)
 #include <U8glib.h>
 #include <SoftwareSerial.h>
 #include "PID.h"
@@ -25,11 +27,11 @@ const int pinSLP1 = 5;//LOW表示电机休眠（低速状态需要手动设置休眠以降低发热）
 const int pinSLP2 = 4;
 //外部控制
 const int pinSensor = 13; //触摸传感器
-
+//舵机
+const int pinServo = 12;
 /*OLED显示屏*/
 U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_FAST);
-/*蓝牙串口*/
-extern SoftwareSerial BTSerial;//蓝牙pin脚定义见MPU6050Filter.h
+
 
 //一次性绘图函数
 void draw(char* str, int line) {
@@ -84,7 +86,7 @@ void loop()
 	draw("Setup...", 3);
 	delay(2000);
 	draw("BlueTooth:9600", 1);
-	BTSerial.begin(9600); //打开蓝牙
+	Serial.begin(9600); //打开蓝牙
 	TOUCHONCE;
 	draw("GyroSetup", 1);
 	MPU6050DMP.GyroSetup(0);

@@ -17,9 +17,6 @@
     <ClInclude Include="__vm\.SelfBalanceCar2.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="quaternion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PID.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -31,9 +28,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="quaternion.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PID.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

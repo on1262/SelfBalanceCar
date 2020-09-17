@@ -46,6 +46,23 @@ void PIDClass::PIDsetup(int dir1, int dir2, int stp1, int stp2, int slp1, int sl
 	PIDv.output = 0.0f;
 }
 
+void PIDClass::PIDVelocity()
+{
+	PIDv.TimeChange = (millis() - PIDv.lastTime);
+	PIDv.Input = PIDa.output;
+	if (isMoving) {
+		PIDv.error = PIDv.Setpoint - PIDv.Input;// 偏差值
+		PIDv.errSum += PIDv.error; //起到控制作用,cm/10
+		PIDv.dErr = (PIDv.error - PIDv.lastErr) / PIDv.TimeChange;
+		PIDv.output = PIDv.Kp * PIDv.error + PIDv.Ki * PIDv.errSum + PIDv.Kd * PIDv.dErr;
+		/*假设PIDa在某偏移角平衡，且PIDv控制速度为0，那么输出output就是0，
+		如果在非0倾角处平衡且没有用A重置平衡点，那么就会出现抖动*/
+		PIDa.Setpoint = PIDv.output; 
+		PIDv.lastErr = PIDv.error;
+	}
+	PIDv.lastTime = millis(); // 记录本次时间
+}
+
 //算法执行
 void PIDClass::PIDLoop()
 {
@@ -56,7 +73,7 @@ void PIDClass::PIDLoop()
 		if (PIDa.Input > 50.0f || PIDa.Input < -50.0f) {
 			digitalWrite(sleep_left, LOW);
 			digitalWrite(sleep_right, LOW);
-			BTSerial.println("-S");
+			Serial.println("-S;");
 			exit(0);
 		}
 		signalDetect(); //检测信号
@@ -92,23 +109,35 @@ void PIDClass::resetStatus()
 
 void PIDClass::signalDetect()
 {
-	if (BTSerial.available()) {
-		detectChar = BTSerial.read();
-		char chrdir[5];
-		if (detectChar == 'F' || detectChar == 'B' || detectChar == 'R' || detectChar == 'L' || detectChar == 'A' || detectChar == 'S') {
-			chrdir[0] = detectChar;
+	if (Serial.available()) {
+		bufferChar = Serial.read();
+		//单字母指令检测
+		if (bufferChar == 'T') {
+			Serial.print("-DUno OK;");
+			Serial.flush();
+		}
+		//字母+数字指令检测
+		if (bufferChar == 'F' || bufferChar == 'B' || bufferChar == 'R' || bufferChar == 'L' || bufferChar == 'A' || bufferChar == 'S') {
+			detectChar = bufferChar;
+			chrdir[0] = bufferChar;
 			for (int i = 1; i < 5; i++)
 			{
-				if (BTSerial.available()) {
-					chrdir[i] = (char)BTSerial.read();
+				if (Serial.available()) {
+					chrdir[i] = (char)Serial.read();
 				}
 				else {
-					BTSerial.print("-E1;");
+					Serial.print("-DUno:Fail to get data.;");
+					Serial.flush();
 					return;
 				}
 			}
 			int data3 = (chrdir[2] - '0') * 100 + (chrdir[3] - '0') * 10 + chrdir[4] - '0';
-			switch (detectChar)
+			//测试输出
+			Serial.print("-D");
+			Serial.print(chrdir);
+			Serial.print(";");
+			Serial.flush();
+			switch (bufferChar)
 			{
 			case 'L':
 				isMoving = true;
@@ -144,16 +173,17 @@ void PIDClass::signalDetect()
 				autoBalancePoint = PIDa.Setpoint;
 				PIDa.Setpoint = 0.0f;
 				PIDs.errSum = 0.0f;
-				BTSerial.print("-A");
-				BTSerial.print((int)distanceSum);
-				BTSerial.println(";");
+				Serial.print("-A");
+				Serial.print(abs((int)(autoBalancePoint*100.0f)));
+				Serial.println(";");
 				distanceSum = 0.0f;
 				break;
 			case 'S': //Abort
 				if (data3 == 0 && chrdir[1] == '0')
 				{
 					if (isMoving == true) {
-						BTSerial.println("-E1;");
+						Serial.print("-E1;");
+						Serial.flush();
 						isMoving = false;
 					}
 					resetStatus();
@@ -175,27 +205,29 @@ void PIDClass::signalDetect()
 		if (detectChar == 'F' || detectChar == 'B')
 		{
 			//反馈
-			BTSerial.print("-");
-			BTSerial.print(detectChar);
-			BTSerial.print((int)(distanceSum));
-			BTSerial.println(";");
+			Serial.print("-");
+			Serial.print(detectChar);
+			Serial.print(abs((int)(distanceSum)));
+			Serial.println(";");
 			//检测退出条件
 			if (abs(targetDistance) < abs(distanceSum) && targetDistance*distanceSum >= 0) {
 				isMoving = false;
-				BTSerial.println("-E0;");
+				Serial.print("-E0;");
+				Serial.flush();
 				resetStatus();
 			}
 		}
 		else if (detectChar == 'L' || detectChar == 'R') {
 			//反馈
-			BTSerial.print("-");
+			Serial.print("-");
 			int deltaRotatingTime = (targetRotation - (rotatingTime - millis()) / (float)turnCoef);
-			BTSerial.print(detectChar);
-			BTSerial.print(deltaRotatingTime);
-			BTSerial.println(";");
+			Serial.print(detectChar);
+			Serial.print(deltaRotatingTime);
+			Serial.println(";");
 			//检测退出条件
 			if (rotatingTime - millis() < 0) {
-				BTSerial.println("-E0;");
+				Serial.print("-E0;");
+				Serial.flush();
 				isMoving = false;
 				resetStatus();
 			}
@@ -248,22 +280,6 @@ void PIDClass::PIDDistance()
 
 	PIDs.lastTime = millis(); // 记录本次时间
 }
-
-void PIDClass::PIDVelocity()
-{
-	PIDv.TimeChange = (millis() - PIDv.lastTime);
-	PIDv.Input = PIDa.output;
-	if (isMoving) {
-		PIDv.error = PIDv.Setpoint - PIDv.Input;// 偏差值
-		PIDv.errSum += PIDv.error; //起到控制作用,cm/10
-		PIDv.dErr = (PIDv.error - PIDv.lastErr) / PIDv.TimeChange;
-		PIDv.output = PIDv.Kp * PIDv.error + PIDv.Ki * PIDv.errSum + PIDv.Kd * PIDv.dErr;
-		PIDa.Setpoint = PIDv.output;
-		PIDv.lastErr = PIDv.error;
-	}
-	PIDv.lastTime = millis(); // 记录本次时间
-}
-
 //电机前进后退控制
 void PIDClass::speedControl(float speedL, float speedR) {
 	float L, R;

@@ -61,6 +61,8 @@ protected:
 	float rotatingTime = 0.2f;
 	bool isMoving = false;
 	char detectChar = '\0';
+	char bufferChar = '\0';
+	char chrdir[5];
 	int SampleTime = 20; //PID控制的采样间隔ms
 	void signalDetect(); //检测蓝牙发送的信号
 	void PIDAngle();
@@ -76,6 +78,5 @@ public:
 };
 
 extern PIDClass PID;
-extern SoftwareSerial BTSerial;
 #endif
 

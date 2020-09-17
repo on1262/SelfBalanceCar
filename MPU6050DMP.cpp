@@ -23,43 +23,23 @@ void MPU6050DMPClass::init()
 {
 }
 
-void MPU6050DMPClass::GyroTestSampling(int sampleCount, int delay_mills, int *data)
-{
-	int readouts[7];
-	BTSerial.print("Sampling start, ms=");
-	BTSerial.println(millis());
-	for (int i = 1; i <= sampleCount; i++) {
-		filter.ReadAccGyrUnFixed(false, readouts);
-		//delayMicroseconds(delay_mills);
-		//BTSerial.print(i);
-		//BTSerial.print(",");
-		//BTSerial.print(millis());
-		for (int k = 0; k < 7; k++) {
-			//BTSerial.print(",");
-			//BTSerial.print(readouts[k]);
-		}
-		//BTSerial.println();
-	}
-	BTSerial.print("Sampling end, ms=");
-	BTSerial.println(millis());
-}
 
 //指定间隔输出调试信息
 void MPU6050DMPClass::display() {
 	//这次放要显示的文字
 	ZYXRPYDeg angle = getAngle();
-	BTSerial.print("F(Hz)=");
-	BTSerial.print(targetRound * 1000.0f / (millis() - lastActionMillis));
-	BTSerial.print("\t Roll:");
-	BTSerial.print(angle.roll);
-	BTSerial.print("\tYaw:");
-	BTSerial.print(angle.yaw);
-	BTSerial.println();
+	Serial.print("-DF(Hz)=");
+	Serial.print(targetRound * 1000.0f / (millis() - lastActionMillis));
+	Serial.print("\t Roll:");
+	Serial.print(angle.roll);
+	Serial.print("\tYaw:");
+	Serial.print(angle.yaw);
+	Serial.println(";");
 }
 
 void MPU6050DMPClass::GyroSetup(int _sampleDelay)
 {
-	BTSerial.println("GyroSetup...");
+	Serial.println("-DGyroSetup...;");
 	sampleDelay = _sampleDelay;
 	filter.init(3); //检测每秒最大角度：3=2000,2=1000,1=500,0=250
 	gyr2Deg = filter.gyr2Deg;
@@ -104,8 +84,10 @@ ZYXRPYDeg MPU6050DMPClass::getAngle()
 
 void MPU6050DMPClass::gyroCalibration()
 {
-	
-	BTSerial.println("Running calibration: second part. Don't move the sensor.");
+#ifdef SERIAL_DEBUG
+	Serial.println("-DRunning calibration: second part. Don't move the sensor.;");
+
+#endif // SERIAL_DEBUG
 	//检查零漂
 	startLoopMills = millis();
 	nLastTime = micros();
@@ -117,13 +99,16 @@ void MPU6050DMPClass::gyroCalibration()
 	//记录角
 	ZYXRPYDeg fangle = integralAngle;
 	fixAngle = vec3{ fangle.roll,fangle.pitch,fangle.yaw };
-	BTSerial.print("fixedRoll=");
-	BTSerial.print(fixAngle.x);
-	BTSerial.print("\t fixedPitch=");
-	BTSerial.print(fixAngle.y);
-	BTSerial.print("\t fixedYaw=");
-	BTSerial.print(fixAngle.z);
-	BTSerial.println();
+#ifdef SERIAL_DEBUG
+	Serial.print("-DfixedRoll=");
+	Serial.print(fixAngle.x);
+	Serial.print("\t fixedPitch=");
+	Serial.print(fixAngle.y);
+	Serial.print("\t fixedYaw=");
+	Serial.print(fixAngle.z);
+	Serial.println(";");
+#endif // SERIAL_DEBUG
+
 	//重置
 	integralAngle = ZYXRPYDeg{ 0.0f,0.0f,0.0f };
 	setAngle(0, 0, 0);
@@ -150,11 +135,14 @@ void MPU6050DMPClass::accFixStep()
 		//校准，只校准roll角
 		if(accY > 0.0f) integralAngle.roll = acos(cosG);
 		else integralAngle.roll = acos(cosG) * -1.0f;
+#ifdef SERIAL_DEBUG
+		Serial.print("-DAccfixed,roll=");
+		Serial.print(integralAngle.roll);
+		Serial.print(" accY=");
+		Serial.print(filterData[1]);
+		Serial.print(";");
+#endif // SERIAL_DEBUG
 
-		BTSerial.print("Accfixed,roll=");
-		BTSerial.print(integralAngle.roll);
-		BTSerial.print(" accY=");
-		BTSerial.println(filterData[1]);
 		//重新对累计误差计时
 		lastAccFixTime = millis();
 		startLoopMills = millis();

@@ -66,7 +66,6 @@ public:
 	MPU6050DMPClass() {};
 	void init();
 	/*陀螺仪测试*/
-	void GyroTestSampling(int sampleCount, int delayMills, int *data); //持续采样，用于信号分析
 	void display(); //在调用gyroLoop之后，进行数据显示
 	//对外接口
 	float cosG = 0.0f;
@@ -78,6 +77,5 @@ public:
 };
 
 extern MPU6050DMPClass MPU6050DMP;
-extern SoftwareSerial BTSerial;
 
 #endif
