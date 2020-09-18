@@ -19,6 +19,9 @@
 
 #include <SoftwareSerial.h>
 
+const int blueToothRX = 11;
+const int blueToothTX = 12;
+
 
 class MPU6050FilterClass
 {
@@ -44,4 +47,5 @@ public:
 };
 
 extern MPU6050FilterClass filter;
+extern SoftwareSerial SerialBT;
 #endif

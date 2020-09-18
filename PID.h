@@ -17,7 +17,6 @@ protected:
 		long lastTime;           // 前次时间
 		float left_output, right_output;
 		float Input, output, Setpoint, error, errSum, dErr, lastErr, TimeChange;
-		float turnLSpeed_Need, turnRSpeed_Need;// 转弯设置
 		float Kp, Ki, Kd;                    // 比例系数(8.0f)、积分系数(0.05)、微分系数(0.26)
 	};
 	struct PIDParameterS // static 不是必须
@@ -49,16 +48,13 @@ protected:
 	PIDParameterV PIDv;
 	float motorCoef; //电机输出转换参数
 	float accCoef; //加速度转换参数
-	float turningSpeed = 100.0f; //转向时的附加速度
 	float lastSpeed = 0.0f; //用于距离增量的计算
 	bool isLoggingDistance = true;
 	float distanceDelta = 0.0f;
 	float distanceSum = 0.0f;
 	float autoBalancePoint = 0.0f;
 	float targetDistance = 0.0f;
-	float targetRotation = 0.0f;
-	const float turnCoef = 10.0f;
-	float rotatingTime = 0.2f;
+	bool isRotating = false;
 	bool isMoving = false;
 	char detectChar = '\0';
 	char bufferChar = '\0';
@@ -76,7 +72,8 @@ public:
 	void PIDLoopStart(); //必须尽早在PIDLoop前调用
 	void resetStatus();
 };
-
+ 
 extern PIDClass PID;
+extern SoftwareSerial SerialBT;
 #endif
 

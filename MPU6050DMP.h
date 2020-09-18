@@ -77,5 +77,5 @@ public:
 };
 
 extern MPU6050DMPClass MPU6050DMP;
-
+extern SoftwareSerial SerialBT;
 #endif

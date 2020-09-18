@@ -1,6 +1,7 @@
 
 #include "MPU6050Filter.h"
 #include "Wire.h"
+SoftwareSerial SerialBT(blueToothTX, blueToothRX);
 
 void MPU6050FilterClass::init(int FS_SEL)
 {
@@ -56,7 +57,7 @@ void MPU6050FilterClass::Calibration()
 {
 	float valSums[7] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0 };
 #ifdef SERIAL_DEBUG
-	Serial.println("-DRunning Calibration: first part. Don't move MPU6050 sensor.;");
+	SerialBT.println("-DRunning Calibration: first part. Don't move MPU6050 sensor.;");
 #endif // SERIAL_DEBUG
 
 	
@@ -64,9 +65,9 @@ void MPU6050FilterClass::Calibration()
 	int calRound = 1;
 	while (isFixed == false) {
 #ifdef SERIAL_DEBUG
-		Serial.print("-DCalibration round start...Round=");
-		Serial.print(calRound);
-		Serial.println(";");
+		SerialBT.print("-DCalibration round start...Round=");
+		SerialBT.print(calRound);
+		SerialBT.println(";");
 #endif // SERIAL_DEBUG
 		//检测
 		for (int k = 0; k < 7; k++) {
@@ -91,11 +92,11 @@ void MPU6050FilterClass::Calibration()
 					calibData[i] = 0.5f * (float)calibData[i] + 0.5f * (float)data;
 				}
 #ifdef SERIAL_DEBUG
-				Serial.print("-DFixing...[");
-				Serial.print(i);
-				Serial.print("]=");
-				Serial.print(data);
-				Serial.println(";");
+				SerialBT.print("-DFixing...[");
+				SerialBT.print(i);
+				SerialBT.print("]=");
+				SerialBT.print(data);
+				SerialBT.println(";");
 #endif // SERIAL_DEBUG
 
 
@@ -105,7 +106,7 @@ void MPU6050FilterClass::Calibration()
 		calRound++;
 	}
 #ifdef SERIAL_DEBUG
-	Serial.println("Calibration done!");
+	SerialBT.println("Calibration done!");
 #endif // SERIAL_DEBUG
 
 	calibData[2] -= standardG; //设芯片Z轴竖直向下，设定静态工作点。

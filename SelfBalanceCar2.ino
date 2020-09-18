@@ -13,7 +13,7 @@
 //#define SERIAL_DEBUG 1
 #include <MsTimer2.h>
 #include <Servo.h>
-#define TOUCHONCE while(1){if(digitalRead(pinSensor) == HIGH || (Serial.available() && (char)Serial.read() == 'E')) break;}delay(500)
+#define TOUCHONCE while(1){if(digitalRead(pinSensor) == HIGH || (SerialBT.available() && (char)SerialBT.read() == 'E')) break;}delay(500)
 #include <U8glib.h>
 #include <SoftwareSerial.h>
 #include "PID.h"
@@ -86,7 +86,8 @@ void loop()
 	draw("Setup...", 3);
 	delay(2000);
 	draw("BlueTooth:9600", 1);
-	Serial.begin(9600); //打开蓝牙
+	SerialBT.begin(9600); //打开蓝牙
+	//Serial.begin(9600);
 	TOUCHONCE;
 	draw("GyroSetup", 1);
 	MPU6050DMP.GyroSetup(0);
