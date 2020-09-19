@@ -99,7 +99,7 @@ void loop()
 	TOUCHONCE;
 	delay(1000);
 	draw("Looping", 1);
-	MPU6050DMP.GyroLoopStart(false);
+	MPU6050DMP.GyroLoopStart();
 	PID.PIDLoopStart();
 	while (1)
 	{

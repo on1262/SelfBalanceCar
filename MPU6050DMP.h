@@ -51,9 +51,8 @@ protected:
 	void gyroCalibration(); //二次修正
 
 	/*基于加速度的零漂修正*/
-	bool isAccFixEnabled = false; //是否开启基于加速度的修正
+
 	float localG = 15920.0f; //本地G值
-	long lastAccFixTime = 0;
 	const long accFixPeriod = 500; //每隔一段时间进行一次修正尝试
 	void accFixStep(); //在低角速度时利用加速度进行修正
 
@@ -69,9 +68,10 @@ public:
 	void display(); //在调用gyroLoop之后，进行数据显示
 	//对外接口
 	float cosG = 0.0f;
+	bool accFixOnce = false; //是否开启基于加速度的修正
 	void GyroSetup(int _sampleDelay); //初始化
 	void GyroLoop(); //调用次数越多
-	void GyroLoopStart(bool _isAccFixEnabled); //时间戳设置函数，一定要在while循环开始之前调用，且尽量不要有间隔。
+	void GyroLoopStart(); //时间戳设置函数，一定要在while循环开始之前调用，且尽量不要有间隔。
 	void setAngle(float roll, float pitch, float yaw);
 	ZYXRPYDeg getAngle(); //返回最终估计的欧拉角
 };

@@ -7,13 +7,10 @@ void MPU6050DMPClass::periodicAction()
 	if (nowRound < targetRound) {
 		nowRound++;
 		//这里放每轮都需要的设置
-		accFixStep();
 		return;
 	}
 	else {
 		nowRound = 0;
-		//自定义代码
-		//display();
 	}
 	//这行要放在最后
 	lastActionMillis = millis();
@@ -22,7 +19,6 @@ void MPU6050DMPClass::periodicAction()
 void MPU6050DMPClass::init()
 {
 }
-
 
 //指定间隔输出调试信息
 void MPU6050DMPClass::display() {
@@ -43,30 +39,29 @@ void MPU6050DMPClass::GyroSetup(int _sampleDelay)
 	sampleDelay = _sampleDelay;
 	filter.init(3); //检测每秒最大角度：3=2000,2=1000,1=500,0=250
 	gyr2Deg = filter.gyr2Deg;
-	lastAccFixTime = millis();
 	lastActionMillis = millis();
 	filter.Calibration();
-	isAccFixEnabled = false;
 	nLastTime = micros();
 	gyroCalibration();
-
 }
 
 void MPU6050DMPClass::GyroLoop()
 {
 	integralUpdateStep();
 	periodicAction(); //周期性执行的函数
+	if (accFixOnce == true) {
+		accFixStep();
+		accFixOnce = false;
+	}
 	delay(sampleDelay); //延迟
 }
-void MPU6050DMPClass::GyroLoopStart(bool _isAccFixEnabled = true)
+void MPU6050DMPClass::GyroLoopStart()
 {
 	//开启加速度修正，并重置所有计时器
-	isAccFixEnabled = _isAccFixEnabled;
 	long ms = millis();
 	startLoopMills = ms;
 	nLastTime = micros();
 	lastActionMillis = ms;
-	lastAccFixTime = ms;
 }
 void MPU6050DMPClass::setAngle(float roll, float pitch, float yaw)
 {
@@ -117,36 +112,22 @@ void MPU6050DMPClass::gyroCalibration()
 void MPU6050DMPClass::accFixStep()
 {
 	//校准需要在低速旋转条件下进行
-	if ((!isAccFixEnabled) || (millis() < lastAccFixTime + accFixPeriod)) {
-		return;
-	}
-	else {
-		if (abs(filterData[4]) > 5) return;
-	}
 	//计算加速度
 	filter.ReadAccGyr(filterData);
-	if (filterData[2] > localG) return;
 	cosG = filterData[2];
 	float accY = filterData[1];
 	cosG /= localG;
 	accY /= localG;
-	if (abs(accY * accY + cosG * cosG - 1.0f) < 0.001f) //限制最大误差1度，也就是0.1%
-	{
-		//校准，只校准roll角
-		if(accY > 0.0f) integralAngle.roll = acos(cosG);
-		else integralAngle.roll = acos(cosG) * -1.0f;
-#ifdef SERIAL_DEBUG
-		SerialBT.print("-DAccfixed,roll=");
-		SerialBT.print(integralAngle.roll);
-		SerialBT.print(" accY=");
-		SerialBT.print(filterData[1]);
-		SerialBT.print(";");
-#endif // SERIAL_DEBUG
-
-		//重新对累计误差计时
-		lastAccFixTime = millis();
-		startLoopMills = millis();
-	}
+	//校准，只校准roll角
+	if (accY > 0.0f) integralAngle.roll = acos(cosG);
+	else integralAngle.roll = acos(cosG) * -1.0f;
+	SerialBT.print("-DAccfixed,roll=");
+	SerialBT.print(integralAngle.roll);
+	SerialBT.print(" accY=");
+	SerialBT.print(filterData[1]);
+	SerialBT.print(";");
+	//重新对累计误差计时
+	startLoopMills = millis();
 }
 void MPU6050DMPClass::integralUpdateStep()
 {
