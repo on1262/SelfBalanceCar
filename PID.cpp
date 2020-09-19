@@ -63,11 +63,17 @@ void PIDClass::signalDetect()
 		//单字母指令检测
 		if (bufferChar == 'T') {
 			//是否能进行下一指令
-			if (isMoving || abs(PIDa.output) > 10.0f || abs(distanceSum) > 10.0f) {
-				SerialBT.print("-TN;");
+			if (isMoving || abs(PIDa.output) > 10.0f || abs(distanceSum) > 20.0f) {
+				//输出边界条件
+				SerialBT.print("@D");
+				SerialBT.print(PIDa.output);
+				SerialBT.print(",");
+				SerialBT.print(distanceSum);
+				SerialBT.print(";");
+				SerialBT.print("@TN;");
 			}
 			else {
-				SerialBT.print("-TY;");
+				SerialBT.print("@TY;");
 			}
 			SerialBT.flush();
 		}
@@ -81,7 +87,7 @@ void PIDClass::signalDetect()
 					chrdir[i] = (char)SerialBT.read();
 				}
 				else {
-					SerialBT.print("-DUno:Fail to get data.;");
+					SerialBT.print("@DUno:Fail to get data.;");
 					SerialBT.flush();
 					return;
 				}
@@ -89,18 +95,19 @@ void PIDClass::signalDetect()
 			detectChar = bufferChar; //如果输入数据全部有效才更新detectChar
 			int data3 = (chrdir[2] - '0') * 100 + (chrdir[3] - '0') * 10 + chrdir[4] - '0';
 			//测试输出
-			SerialBT.print("-D");
+			SerialBT.print("@D");
 			SerialBT.print(chrdir);
 			SerialBT.print(";");
 			SerialBT.flush();
+			//执行LRFB操作之前都需要进行A操作
+			autoBalancePoint += PIDa.Setpoint;
+			PIDa.Setpoint = 0.0f;
+			PIDs.errSum = 0.0f;
+			PIDa.errSum = 0.0f;
 			switch (bufferChar)
 			{
 			case 'L':
 			case 'R':
-				autoBalancePoint += PIDa.Setpoint;
-				PIDa.Setpoint = 0.0f;
-				PIDs.errSum = 0.0f;
-				PIDa.errSum = 0.0f;
 				startRotateMillis = millis();
 				targetRotateMillis = startRotateMillis + rotationCoef * data3;
 				isMoving = true;
@@ -124,11 +131,11 @@ void PIDClass::signalDetect()
 				distanceSum = 0.0f;
 				break;
 			case 'A':
-				autoBalancePoint += PIDa.Setpoint; 
+				autoBalancePoint += PIDa.Setpoint;
 				PIDa.Setpoint = 0.0f;
 				PIDs.errSum = 0.0f;
 				PIDa.errSum = 0.0f;
-				SerialBT.print("-DA");
+				SerialBT.print("@DA");
 				SerialBT.print(abs((int)(autoBalancePoint*100.0f)));
 				SerialBT.print(";");
 				SerialBT.flush();
@@ -139,7 +146,7 @@ void PIDClass::signalDetect()
 				{
 					PIDv.Setpoint = 0.0f;
 					if (isMoving == true) {
-						SerialBT.print("-E1;");
+						SerialBT.print("@E1;");
 						SerialBT.flush();
 						isMoving = false;
 					}
@@ -162,21 +169,21 @@ void PIDClass::signalDetect()
 		if (detectChar == 'F' || detectChar == 'B')
 		{
 			//反馈
-			SerialBT.print("-");
+			SerialBT.print("@");
 			SerialBT.print(detectChar);
 			SerialBT.print(abs((int)(distanceSum)));
 			SerialBT.println(";");
 			//检测退出条件
 			if (abs(targetDistance) < abs(distanceSum) && targetDistance*distanceSum >= 0) {
 				isMoving = false;
-				SerialBT.print("-E0;");
+				SerialBT.print("@E0;");
 				SerialBT.flush();
 				resetStatus();
 			}
 		}
 		else if (detectChar == 'L' || detectChar == 'R') {
 			//反馈
-			SerialBT.print("-");
+			SerialBT.print("@");
 			SerialBT.print(detectChar);
 			SerialBT.print((int)((millis() - startRotateMillis) / rotationCoef));
 			SerialBT.println(";");
@@ -191,7 +198,7 @@ void PIDClass::signalDetect()
 			//检测退出条件
 			if (millis() > targetRotateMillis) {
 				isMoving = false;
-				SerialBT.print("-E0;");
+				SerialBT.print("@E0;");
 				SerialBT.flush();
 				resetStatus();
 				//反冲，用于消除转向影响
@@ -199,7 +206,7 @@ void PIDClass::signalDetect()
 				PIDa.Setpoint = 0.0f;
 				PIDs.errSum = 0.0f;
 				PIDa.errSum = 0.0f;
-				SerialBT.print("-DA");
+				SerialBT.print("@DA");
 				SerialBT.print(abs((int)(autoBalancePoint*100.0f)));
 				SerialBT.print(";");
 				SerialBT.flush();
@@ -297,7 +304,7 @@ void PIDClass::PIDLoop()
 		if (PIDa.Input > 30.0f || PIDa.Input < -30.0f) {
 			digitalWrite(sleep_left, LOW);
 			digitalWrite(sleep_right, LOW);
-			SerialBT.println("-S;");
+			SerialBT.println("@S;");
 			while (1) {};
 		}
 		signalDetect(); //检测信号

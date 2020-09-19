@@ -24,7 +24,7 @@ void MPU6050DMPClass::init()
 void MPU6050DMPClass::display() {
 	//这次放要显示的文字
 	ZYXRPYDeg angle = getAngle();
-	SerialBT.print("-DF(Hz)=");
+	SerialBT.print("@DF(Hz):");
 	SerialBT.print(targetRound * 1000.0f / (millis() - lastActionMillis));
 	SerialBT.print("\t Roll:");
 	SerialBT.print(angle.roll);
@@ -35,7 +35,7 @@ void MPU6050DMPClass::display() {
 
 void MPU6050DMPClass::GyroSetup(int _sampleDelay)
 {
-	SerialBT.println("-DGyroSetup...;");
+	SerialBT.println("@DGyroSetup...;");
 	sampleDelay = _sampleDelay;
 	filter.init(3); //检测每秒最大角度：3=2000,2=1000,1=500,0=250
 	gyr2Deg = filter.gyr2Deg;
@@ -80,7 +80,7 @@ ZYXRPYDeg MPU6050DMPClass::getAngle()
 void MPU6050DMPClass::gyroCalibration()
 {
 #ifdef SERIAL_DEBUG
-	SerialBT.println("-DRunning calibration: second part. Don't move the sensor.;");
+	SerialBT.println("@DRunning calibration: second part. Don't move the sensor.;");
 
 #endif // SERIAL_DEBUG
 	//检查零漂
@@ -103,7 +103,7 @@ void MPU6050DMPClass::gyroCalibration()
 	SerialBT.print(fixAngle.z);
 	SerialBT.println(";");
 #endif // SERIAL_DEBUG
-	SerialBT.println("-DTouch to Loop.;");
+	SerialBT.println("@DTouch to Loop.;");
 	//重置
 	integralAngle = ZYXRPYDeg{ 0.0f,0.0f,0.0f };
 	setAngle(0, 0, 0);
@@ -121,11 +121,12 @@ void MPU6050DMPClass::accFixStep()
 	//校准，只校准roll角
 	if (accY > 0.0f) integralAngle.roll = acos(cosG);
 	else integralAngle.roll = acos(cosG) * -1.0f;
-	SerialBT.print("-DAccfixed,roll=");
+	SerialBT.print("@DAccfixed,roll=");
 	SerialBT.print(integralAngle.roll);
 	SerialBT.print(" accY=");
 	SerialBT.print(filterData[1]);
 	SerialBT.print(";");
+	SerialBT.flush();
 	//重新对累计误差计时
 	startLoopMills = millis();
 }
